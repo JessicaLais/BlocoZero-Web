@@ -11,12 +11,12 @@ export function SignIn(){
     const navigate = useNavigate()
    async function onSubmit(e: React.FormEvent){
        e.preventDefault()
-    const response = await fetch('http://localhost:8080/login', {
+    const response = await fetch('http://localhost:8080/user/login', {
         method: 'POST',
         headers: {  
             'Content-Type': 'application/json'},
         body: JSON.stringify({
-            username: email,  
+             email,  
             password,
         })
     })
@@ -25,7 +25,7 @@ export function SignIn(){
         alert(data.error)
         return
     }
-    navigate("/")
+    navigate("/work")
 }
     return(
         <div className="w-screen h-screen flex ">

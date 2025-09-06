@@ -25,7 +25,7 @@ export function Cards({data}: CardsProps){
 
             <div className="flex flex-col items-center w-full max-w-[200px] h-38 bg-white rounded-lg shadow-md p-6 transform transition-transform hover:scale-105">
                 <h1 className="text-lg text-gray-700 font-medium">Progresso</h1>
-                <p className="text-3xl text-gray-900 font-semibold mt-4">{data.progress}</p>
+                <p className="text-3xl text-gray-900 font-semibold mt-4">{data.progress}%</p>
             </div>
         </div>
     );

@@ -1,17 +1,17 @@
 import { useState, useEffect } from "react";
-import searchSvg from "../assets/search.svg"; // Adjust the path as needed
-import { SessionItem } from "../features/home/components/Session"
+import searchSvg from "../assets/search.svg"; 
 import { Input } from "../features/home/components/Input"
 import { Button } from "../features/home/components/Button";
+import { SessionItem } from "../features/home/components/Session"
 import { Pagination } from "../features/home/components/Pagination";
 
 interface Obra {
     id: string;
     title: string;
     enterprise: string;
-    photoUrl: string;
-    startDate: string;
-    endDate: string;
+    photo_url: string;
+    start_date: string;
+    end_date: string;
 }
 
 export function Home(){
@@ -26,7 +26,7 @@ export function Home(){
     }
     useEffect(() => {
        const getWorks = async () => {
-        const response = await fetch(`http://localhost:8080/work`);
+        const response = await fetch(`http://localhost:8080/work/list`);
         const data = await response.json();
         setWorks(data);
        }
