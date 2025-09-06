@@ -31,7 +31,7 @@ export function EstoqueList(){
     return (
         <div className="flex justify-center p-15 overflow-hidden">
             <main className="bg-white rounded-xl p-10 w-[768px] flex flex-col">
-                <div className="my-6 flex flex-col gap-4 max-h-[342px] overflow-y-scroll">
+                
                     <h1 className="text-gray-100 font-bold text-xl flex-1">Estoque das Obras responsáveis</h1>
                     <form onSubmit={fetchRefunds} className="flex flex-1 block items-center justify-between mb-4 pb-6 border-b-[1px] border-b-gray-400 md:flex-row gap-2 mt-6 ">
                         <Input onChange={(e) => setName(e.target.value)} placeholder="Pesquisar"/>
@@ -40,11 +40,13 @@ export function EstoqueList(){
                             className="w-5"/>
                         </Button>
                     </form>
+                      <div className="flex flex-col gap-4 max-h-[342px] overflow-y-scroll">
+                        {works.map((work) => (
+                                <SessionItem key={work.id} data={work} href={`/estoque/${work.id}`}/>
+                            ))}
                         
-                    {works.map((work) => (
-                            <SessionItem key={work.id} data={work} href={`/estoque/${work.id}`}/>
-                        ))}
-                </div>
+                        </div>  
+                
             </main>
         </div>
     )
