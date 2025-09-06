@@ -5,8 +5,8 @@ import { Home } from "../pages/HomePage";
 export function HomePage() {
     return(
         <Routes>
-            <Route path="/" element={<AppLayout />}>
-                <Route path="/" element={<Home />} />
+            <Route path="/work" element={<AppLayout />}>
+                <Route path="/work" element={<Home />} />
                 <Route path="/work/:id" element={<CardObra />} />
             </Route>
         </Routes>
