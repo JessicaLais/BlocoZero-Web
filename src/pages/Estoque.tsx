@@ -9,7 +9,7 @@ export function EstoqueObra(){
 
           */}
           <div>
-            <a href="/estoque" className="font-semibold text-green-400 cursor-pointer">Voltar</a>
+            <a href="/estoque" className="font-semibold text-blue-400 cursor-pointer">Voltar</a>
           </div>
             <FilterStatic />
             <Table />

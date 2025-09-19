@@ -11,8 +11,7 @@ type Props = React.ComponentProps<"a"> & {
     data: SessionItemProps
 }
 
-export function SessionItem({ data, ...rest }: Props) { 
-    console.log(data)   
+export function SessionItem({ data, ...rest }: Props) {   
     return (
         <a 
             className="flex items-center gap-3 hover:bg-green-100/5 cursor-pointer rounded-md border-1 border-gray-300 p-2"

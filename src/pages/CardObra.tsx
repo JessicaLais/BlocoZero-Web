@@ -12,7 +12,7 @@ export function CardObra(){
             const response = await fetch(`http://localhost:8080/work/${id}`);
             const data = await response.json();
             setwork(data);
-
+            console.log(data)
         }catch(error){
             alert("Erro ao buscar obra")
         }

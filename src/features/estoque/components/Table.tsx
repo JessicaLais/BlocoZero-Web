@@ -27,6 +27,7 @@ export function Table() {
                 if (work_id) {
                     const response = await fetch(`http://localhost:8080/items/list/${work_id}`);
                     const data = await response.json();
+                    console.log(data);
                     setInsumos(data.itemsByWorkId);
                 }
             } catch (error) {
@@ -46,26 +47,26 @@ export function Table() {
     }
 
     return (
-        <table className="bg-gray-400 border-1 border-gray-500 w-full text-left ">
+        <table className="bg-white border-1 border-gray-500 w-full text-left ">
             <thead> 
-                <tr className="bg-gray-500">
-                    <th className="px-1 border-2">Código</th>
-                    <th className="px-1 border-2">Nome</th>
-                    <th className="px-1 border-2">Tipo</th>
-                    <th className="px-1 border-2">Quantidade</th>
-                    <th className="px-1 border-2">Unidades</th>
-                    <th className="px-1 border-2">Lote</th>
+                <tr className="bg-gray-300">
+                    <th className="px-1 border-1">Código</th>
+                    <th className="px-1 border-1">Nome</th>
+                    <th className="px-1 border-1">Tipo</th>
+                    <th className="px-1 border-1">Quantidade</th>
+                    <th className="px-1 border-1">Unidades</th>
+                    <th className="px-1 border-1">Lote</th>
                 </tr>
             </thead>
             <tbody>
                 {insumos.map((insumo) => (
-                    <tr key={insumo.id} className="text-sm border-b-2 border-gray-500"> 
-                        <td className="px-2 border-2">{insumo.code}</td>
-                        <td className="px-2 border-2">{insumo.name}</td>
-                        <td className="px-2 border-2">{insumo.type}</td>
-                        <td className="px-2 border-2">{insumo.quantity}</td>
-                        <td className="px-2 border-2">{insumo.unit}</td>
-                        <td className="px-2 border-2">{insumo.lote}</td>
+                    <tr key={insumo.id} className="text-sm border-b-1 border-gray-500"> 
+                        <td className="px-2 border-1">{insumo.code}</td>
+                        <td className="px-2 border-1">{insumo.name}</td>
+                        <td className="px-2 border-1">{insumo.type}</td>
+                        <td className="px-2 border-1">{insumo.quantity}</td>
+                        <td className="px-2 border-1">{insumo.unit}</td>
+                        <td className="px-2 border-1">{insumo.lote}</td>
                     </tr>   
                 ))}
             </tbody>

@@ -15,9 +15,9 @@ interface Obra {
 }
 
 export function Home(){
-    const [name, setName] = useState("")
+    const [/*name*/, setName] = useState("")
     const [page, setPage] = useState(1)
-    const [totalOfPage, setTotalOfPage] = useState(10)
+    const [totalOfPage, /*setTotalOfPage*/] = useState(10)
     const [works, setWorks] = useState<Obra[]>([])
 
     function fetchRefunds(e: React.FormEvent) {
@@ -49,7 +49,7 @@ export function Home(){
     }
 
     return(
-        <div className="flex justify-center p-15">
+        <div className="flex justify-center p-6 overflow-hidden">
             <main className="bg-white rounded-xl p-10 w-[768px] flex-col">
                 <h1 className="text-gray-100 font-bold text-xl flex-1">Obras</h1>
                 <form onSubmit={fetchRefunds} className="flex flex-1 items-center justify-between mb-4 pb-6 border-b-[1px] border-b-gray-400 md:flex-row gap-2 mt-6 ">
@@ -59,7 +59,7 @@ export function Home(){
                     className="w-5"/>
                 </Button>
             </form>
-             <div className="my-6 flex flex-col gap-4 max-h-[342px] overflow-y-scroll">
+             <div className="my-6 flex flex-col gap-4 max-h-[282px] overflow-y-scroll">
                 {works.map((work) => (
                         <SessionItem key={work.id} data={work} href={`/work/${work.id}`}/>
                     ))}
