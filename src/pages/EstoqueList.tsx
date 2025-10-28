@@ -4,12 +4,11 @@ import { Input } from "../features/home/components/Input"
 import { Button } from "../features/home/components/Button";
 import { useEffect, useState } from "react";
 interface Obra {
-    id: string
-    title: string
-    enterprise: string
-    photoUrl: string
-    startDate: string
-    endDate: string
+    id_work: string;
+    title: string;
+    photo_url: string;
+    start_date: string;
+    end_date: string;
 }
 export function EstoqueList(){
     const [/*name*/, setName] = useState("")
@@ -21,7 +20,7 @@ export function EstoqueList(){
     }
         useEffect(() => {
            const getWorks = async () => {
-            const response = await fetch(`http://localhost:8080/work/list`);
+            const response = await fetch(`http://localhost:8080/work/list/0`);
             const data = await response.json();
             setWorks(data);
            }
@@ -42,7 +41,7 @@ export function EstoqueList(){
                     </form>
                       <div className="flex flex-col gap-4 max-h-[342px] overflow-y-scroll">
                         {works.map((work) => (
-                                <SessionItem key={work.id} data={work} href={`/estoque/${work.id}`}/>
+                                <SessionItem key={work.id_work} data={work} href={`/estoque/${work.id_work}`}/>
                             ))}
                         
                         </div>  

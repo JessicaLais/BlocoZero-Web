@@ -4,26 +4,35 @@ import { useEffect, useState } from "react"
 import { useParams } from "react-router"
 
 export function CardObra(){
-    const {id} = useParams()
-    const [work, setwork] = useState({})
+    const { id } = useParams(); 
+    const [work, setWork] = useState(null); 
+
     useEffect(() => {
-       const getwork = async () => {
-        try {
-            const response = await fetch(`http://localhost:8080/work/${id}`);
-            const data = await response.json();
-            setwork(data);
-            console.log(data)
-        }catch(error){
-            alert("Erro ao buscar obra")
-        }
+       if (!id) return;
+       const getWork = async () => {
+         try {
+             const response = await fetch(`http://localhost:8080/work/list/specificWork/${id}`);
+             const data = await response.json();
+             const workData = data.getSpecificWork.work;
+             setWork(workData); 
+             console.log(workData); 
+
+         } catch(error) {
+             console.error("Erro ao buscar obra:", error);
+             alert("Erro ao buscar obra");
+         }
        }
-       getwork();
-    },[]
-)
+       getWork();
+    }, [id]);
+
+    if (!work) {
+        return <div>Carregando detalhes da obra...</div>;
+    }
+
     return (
         <div className="w-full flex flex-col items-center justify-center bg-white-100 p-4">
-            <ContentBox  data={work}/> {/*Está reclamando pq não passei todas as propriedades que vem do backend no meu componente */}
-            <Cards data={work}/>
+            <ContentBox data={work} />
+            <Cards data={work} />
         </div>
     )
 }

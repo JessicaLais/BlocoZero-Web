@@ -6,9 +6,8 @@ import { SessionItem } from "../features/home/components/Session"
 import { Pagination } from "../features/home/components/Pagination";
 
 interface Obra {
-    id: string;
+    id_work: string;
     title: string;
-    enterprise: string;
     photo_url: string;
     start_date: string;
     end_date: string;
@@ -17,7 +16,7 @@ interface Obra {
 export function Home(){
     const [/*name*/, setName] = useState("")
     const [page, setPage] = useState(1)
-    const [totalOfPage, /*setTotalOfPage*/] = useState(10)
+    const [totalOfPage, setTotalOfPage] = useState(1)
     const [works, setWorks] = useState<Obra[]>([])
 
     function fetchRefunds(e: React.FormEvent) {
@@ -25,13 +24,22 @@ export function Home(){
         
     }
     useEffect(() => {
-       const getWorks = async () => {
-        const response = await fetch(`http://localhost:8080/work/list`);
-        const data = await response.json();
-        setWorks(data);
-       }
-      getWorks();
-    },[]
+    const getWorks = async () => {
+     try {
+       const response = await fetch(`http://localhost:8080/work/list/0/page/${page}`);
+       const data = await response.json();
+       
+       // ADICIONE ESTA LINHA PARA DEPURAR
+       console.log("RESPOSTA DA API:", data); 
+
+       setWorks(data.works);
+       setTotalOfPage(data.totalOfPage);
+     } catch (error) {
+       console.error("Erro ao buscar dados:", error);
+     }
+    }
+    getWorks();
+},[page]
 )
 
     function handlePagination(action: "next" | "previous"){
@@ -61,7 +69,7 @@ export function Home(){
             </form>
              <div className="my-6 flex flex-col gap-4 max-h-[282px] overflow-y-scroll">
                 {works.map((work) => (
-                        <SessionItem key={work.id} data={work} href={`/work/${work.id}`}/>
+                        <SessionItem key={work.id_work} data={work} href={`/work/list/specificWork/${work.id_work}`}/>
                     ))}
             </div>
             <Pagination current={page}
