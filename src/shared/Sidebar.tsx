@@ -1,6 +1,5 @@
 import { useState } from 'react';
 import { FaHome, FaCalendarAlt, FaBox, FaChartBar, FaCaretDown, FaCaretUp } from 'react-icons/fa';
-import blocoZeroLogoSvg from "../assets/blocoZeroLogo.svg";
 import Teste from "../assets/Teste.png";
 import { Link } from 'react-router-dom';
 

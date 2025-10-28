@@ -6,8 +6,8 @@ export function HomePage() {
     return(
         <Routes>
             <Route path="/work" element={<AppLayout />}>
-                <Route path="/work" element={<Home />} />
-                <Route path="/work/:id" element={<CardObra />} />
+                <Route index element={<Home />} />
+                <Route path="list/specificWork/:id" element={<CardObra />} />
             </Route>
         </Routes>
     )
