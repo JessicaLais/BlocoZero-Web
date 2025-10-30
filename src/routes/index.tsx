@@ -8,7 +8,7 @@ import { EstoqueTabelaRoute } from "./EstoqueTabela.tsx";
 
 const session = {
     user: {
-        role: "stock_control"
+        role: "manager"
     }
 }
 export function Routes(){
@@ -21,12 +21,14 @@ export function Routes(){
                         <EstoqueRoute/>
                     </div>
             )
+            
             case "manager":
-                return <CadastroObraRoutes/>
-                
-            case "stock_control":
-                return <EstoqueTabelaRoute/>
-                
+                return (
+                    <>
+                        <CadastroObraRoutes/>
+                        <EstoqueTabelaRoute/>
+                    </>
+                )
             case "":
                 return <AuthRoutes />
                
