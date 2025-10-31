@@ -1,7 +1,7 @@
 export type SessionItemProps = {
     id_work: string
     title: string
-    photo_url: string
+    photo: string
     start_time: string
     end_time: string
 }
@@ -16,7 +16,7 @@ export function SessionItem({ data, ...rest }: Props) {
             className="flex items-center gap-3 hover:bg-green-100/5 cursor-pointer rounded-md border-1 border-gray-300 p-2"
             {...rest}
         >
-            <img className="w-8 h-8" src={data.photo_url} alt="Ícone da categoria"/>
+            <img className="w-8 h-8" src={data.photo} alt="Ícone da categoria"/>
 
             <div className="flex-1 flex flex-col">
                 <strong className="text-sm text-gray-100">{data.title}</strong>

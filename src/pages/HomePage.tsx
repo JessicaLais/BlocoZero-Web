@@ -8,9 +8,9 @@ import { Pagination } from "../features/home/components/Pagination";
 interface Obra {
     id_work: string;
     title: string;
-    photo_url: string;
-    start_date: string;
-    end_date: string;
+    photo: string;
+    start_time: string;
+    end_time: string;
 }
 
 export function Home(){
@@ -24,21 +24,25 @@ export function Home(){
         
     }
     useEffect(() => {
-    const getWorks = async () => {
-     try {
-       const response = await fetch(`http://localhost:8080/work/list/0/page/${page}`);
-       const data = await response.json();
-       
-       // ADICIONE ESTA LINHA PARA DEPURAR
-       console.log("RESPOSTA DA API:", data); 
+     const getWorks = async () => {
+        try {
+        const response = await fetch(`http://localhost:8080/work/list/1/page/${page}`);
+        const data = await response.json();
+        console.log("RESPOSTA DA API:", data); 
+        if (data.works && Array.isArray(data.works.works)) {
+          setWorks(data.works.works);
+        }
+        if (data.works && data.works.page) {
+          const pageInfo = data.works.page; 
+          const totalPagesString = pageInfo.split(' of ')[1]; 
+          setTotalOfPage(parseInt(totalPagesString, 10)); 
+        }
 
-       setWorks(data.works);
-       setTotalOfPage(data.totalOfPage);
-     } catch (error) {
-       console.error("Erro ao buscar dados:", error);
-     }
+    } catch (error) {
+        console.error("Erro ao buscar dados:", error);
     }
-    getWorks();
+    }
+     getWorks();
 },[page]
 )
 
@@ -55,7 +59,7 @@ export function Home(){
             return prevPage
         })
     }
-
+    
     return(
         <div className="flex justify-center p-6 overflow-hidden">
             <main className="bg-white rounded-xl p-10 w-[768px] flex-col">
@@ -69,7 +73,10 @@ export function Home(){
             </form>
              <div className="my-6 flex flex-col gap-4 max-h-[282px] overflow-y-scroll">
                 {works.map((work) => (
-                        <SessionItem key={work.id_work} data={work} href={`/work/list/specificWork/${work.id_work}`}/>
+                    
+                        <SessionItem key={work.id_work} data={{...work,
+                            photo: `http://localhost:8080/work/photo/${work.id_work}`
+                        }} href={`/work/specific/${work.id_work}`}/>
                     ))}
             </div>
             <Pagination current={page}
