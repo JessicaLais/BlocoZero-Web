@@ -7,7 +7,7 @@ export function HomePage() {
         <Routes>
             <Route path="/work" element={<AppLayout />}>
                 <Route index element={<Home />} />
-                <Route path="list/specificWork/:id" element={<CardObra />} />
+                <Route path="specific/:id" element={<CardObra />} />
             </Route>
         </Routes>
     )

@@ -1,44 +1,96 @@
-import { useState } from 'react';
+import { useActionState } from "react";
+import { z, ZodError } from "zod";
+import { AxiosError } from "axios";
+import { useNavigate } from "react-router";
+
 import { Button } from '../features/auth/components/Button';
 import { InputAuth } from '../features/auth/components/InputAuth';
 import { LogoAuth } from '../features/auth/components/LogoAuth';
-import { useNavigate } from "react-router"
+import { api } from "../services/api"; 
+import { useAuth } from "../hooks/useAuth"; 
 
-export function SignIn(){
-    const [email, setEmail] = useState("")
-    const [password, setPassword] = useState("")
-    const [isLoading, setIsloading] = useState(false)
-    const navigate = useNavigate()
-   async function onSubmit(e: React.FormEvent){
-       e.preventDefault()
-    const response = await fetch('http://localhost:8080/user/login', {
-        method: 'POST',
-        headers: {  
-            'Content-Type': 'application/json'},
-        body: JSON.stringify({
-             email,  
-            password,
-        })
-    })
-    const data = await response.json()
-    if(data.error){
-        alert(data.error)
-        return
+const sigInScheme = z.object({
+    email: z.string().email({ message: "E-mail inválido" }),
+    password: z.string().trim().min(1, { message: "Informe a senha" }),
+});
+
+export function SignIn() {
+    const [state, formAction, isLoading] = useActionState(signIn, null);
+    
+    const auth = useAuth();
+    const navigate = useNavigate();
+
+    async function signIn(_: any, formData: FormData) {
+        try {
+            const data = sigInScheme.parse({
+                email: formData.get("email"),
+                password: formData.get("password"),
+            });
+
+            const response = await api.post("/user/login", data);
+            console.log("RESPOSTA DA API:", response.data);
+            auth.save({ user: response.data });
+            const userRole = response.data.userFunction;
+            if (userRole === "manager"){
+                navigate("/cadastro-obra");
+                return null;
+            }
+            if(userRole === "tender"){
+                navigate("/work");
+                return null; 
+            }
+
+        } catch (error) {
+            console.log(error);
+
+            if (error instanceof ZodError) {
+                return { message: error.issues[0].message };
+            }
+            if (error instanceof AxiosError) {
+                console.log("DADOS COMPLETOS DO ERRO:", error.response?.data)
+                return { message: error.response?.data.message };
+            }
+            return { message: "Não foi possível conectar ao servidor" };
+        }
     }
-    navigate("/work")
-}
-    return(
+
+    return (
         <div className="w-screen h-screen flex ">
             <div className="w-1/2 h-screen bg-blue-400 flex items-center justify-center">
-                <form onSubmit={onSubmit} className='flex flex-col items-center justify-center gap-5 w-105 h-105 border-2 border-blue-400 bg-blue-400 drop-shadow-lg rounded-2xl  p-8 '>
+                
+                {/* 8. O <form> é atualizado */}
+                <form action={formAction} className='flex flex-col items-center justify-center gap-5 w-105 h-105 border-2 border-blue-400 bg-blue-400 drop-shadow-lg rounded-2xl  p-8 '>
                     <h1 className='text-white text-4xl font-semibold'>Conecte-se</h1>
-                    <InputAuth required legend="E-mail" type="email" placeholder="Seu@email.com" onChange={(e) => setEmail(e.target.value)}/>
-                    <InputAuth required legend="Senha" type="password" placeholder="Sua senha" onChange={(e) => setPassword(e.target.value)}/>
+                    
+                    {/* 9. Seus inputs agora usam 'name' em vez de 'onChange' */}
+                    <InputAuth 
+                        name="email" 
+                        required 
+                        legend="E-mail" 
+                        type="email" 
+                        placeholder="Seu@email.com" 
+                    />
+                    <InputAuth 
+                        name="password" 
+                        required 
+                        legend="Senha" 
+                        type="password" 
+                        placeholder="Sua senha" 
+                    />
+
+                    {/* 10. Exibição da mensagem de erro */}
+                    {state?.message && (
+                        <p className="text-sm text-red-100 text-center font-medium">
+                            {state.message}
+                        </p>
+                    )}
+                    
+                    {/* 11. O 'isLoading' agora vem do 'useActionState' */}
                     <Button type='submit' isLoading={isLoading}>Entrar</Button>
                     <a href="/signup" className='text-gray-300 cursor-pointer '>Criar conta</a>
                 </form>
             </div>
             <LogoAuth />
         </div>
-    )
+    );
 }

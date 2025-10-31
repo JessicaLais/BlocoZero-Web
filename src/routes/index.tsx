@@ -1,18 +1,14 @@
 import { BrowserRouter } from "react-router";
-
+import { useAuth } from "../hooks/useAuth.tsx";
 import { AuthRoutes } from "./AuthRoutes.tsx";
 import { HomePage } from "./HomePage.tsx";
 import { EstoqueRoute } from "./Estoque.tsx";
 import { CadastroObraRoutes } from "./CadastroObra.tsx";
 
-const session = {
-    user: {
-        role: "tender"
-    }
-}
 export function Routes(){
+    const { session } = useAuth()
     function Route(){
-        switch(session?.user.role){
+        switch(session?.user.userFunction){
             case "tender":
                 return (
                     <div>
@@ -23,7 +19,7 @@ export function Routes(){
             case "manager":
                 return <CadastroObraRoutes/>
                 
-            case "":
+            default:
                 return <AuthRoutes />
         }
     }
@@ -33,3 +29,4 @@ export function Routes(){
         </BrowserRouter>
     )
 }
+
