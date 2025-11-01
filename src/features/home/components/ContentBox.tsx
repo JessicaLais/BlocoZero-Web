@@ -13,11 +13,12 @@ export type ContentBoxProps = {
 export function ContentBox({data}: ContentBoxProps) {
     const formattedStartDate = data.start_time ? formatDate(data.start_time) : '';
     const formattedEndDate = data.end_time ? formatDate(data.end_time) : '';
+    const imageUrl = `data:image/jpeg;base64,${data.photo}`;
     return (
         <main className="bg-white rounded-sm shadow-xl w-full  2xl:max-h-[400px] flex">
             <div className=" flex-shrink-0">
                 <img
-                    src={data.photo}
+                    src={imageUrl}
                     alt="Prédio Lincoln"
                     className="2xl:max-h-[380px] md:max-h-[312px] h-auto w-full object-cover"
                 />

@@ -50,7 +50,7 @@ const sidebarLinks = [
 
 export function Sidebar() {
     const { session, remove } = useAuth();
-    const userRole = session?.user?.userFunction;
+    const userRole = session?.userFunction;
 
     const [openDropdown, setOpenDropdown] = useState<string | null>(null);
 
