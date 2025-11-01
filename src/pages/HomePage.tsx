@@ -29,11 +29,11 @@ export function Home(){
         const response = await fetch(`http://localhost:8080/work/list/1/page/${page}`);
         const data = await response.json();
         console.log("RESPOSTA DA API:", data); 
-        if (data.works && Array.isArray(data.works.works)) {
-          setWorks(data.works.works);
+        if (data.works && Array.isArray(data.works)) {
+          setWorks(data.works);
         }
-        if (data.works && data.works.page) {
-          const pageInfo = data.works.page; 
+        if (data.page) {
+          const pageInfo = data.page; 
           const totalPagesString = pageInfo.split(' of ')[1]; 
           setTotalOfPage(parseInt(totalPagesString, 10)); 
         }
@@ -74,9 +74,7 @@ export function Home(){
              <div className="my-6 flex flex-col gap-4 max-h-[282px] overflow-y-scroll">
                 {works.map((work) => (
                     
-                        <SessionItem key={work.id_work} data={{...work,
-                            photo: `http://localhost:8080/work/photo/${work.id_work}`
-                        }} href={`/work/specific/${work.id_work}`}/>
+                        <SessionItem key={work.id_work} data={work} href={`/work/specific/${work.id_work}`}/>
                     ))}
             </div>
             <Pagination current={page}

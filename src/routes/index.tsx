@@ -1,32 +1,56 @@
-import { BrowserRouter } from "react-router";
+// Em src/routes/index.tsx
+import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom"; // <-- TUDO DE "react-router-dom"
 import { useAuth } from "../hooks/useAuth.tsx";
-import { AuthRoutes } from "./AuthRoutes.tsx";
-import { HomePage } from "./HomePage.tsx";
-import { EstoqueRoute } from "./Estoque.tsx";
-import { CadastroObraRoutes } from "./CadastroObra.tsx";
 
-export function Routes(){
-    const { session } = useAuth()
-    function Route(){
-        switch(session?.user.userFunction){
-            case "tender":
-                return (
-                    <div>
-                        <HomePage/>
-                        <EstoqueRoute/>
-                    </div>
-            )
-            case "manager":
-                return <CadastroObraRoutes/>
+import { AppLayout } from "../shared/AppLayout";
+import { AuthRoutes } from "./AuthRoutes.tsx"; 
+import { Home } from "../pages/HomePage";
+import { CardObra } from "../pages/CardObra";
+import { EstoqueList } from "../pages/EstoqueList";
+import { EstoqueObra } from "../pages/Estoque";
+import { CadastroObra } from "../pages/CadastroObra";
+
+
+function AppRoutes() {
+    const { session } = useAuth();
+
+    return (
+        <Routes>
+            <Route path="/" element={<AppLayout />}>
                 
-            default:
-                return <AuthRoutes />
-        }
-    }
-    return(
-        <BrowserRouter>
-            <Route />
-        </BrowserRouter>
-    )
+                {session?.userFunction === "manager" && (
+                    <>
+                        <Route path="/cadastro-obra" element={<CadastroObra />} />
+                        <Route path="/" element={<Navigate to="/cadastro-obra" />} />
+                    </>
+                )}
+
+                {session?.userFunction === "tender" && (
+                    <>
+                        <Route path="/work" element={<Home />} />
+                        <Route path="/work/specific/:id" element={<CardObra />} />
+                        <Route path="/estoque" element={<EstoqueList />} />
+                        <Route path="/estoque/:work_id" element={<EstoqueObra />} />
+                        <Route path="/" element={<Navigate to="/work" />} />
+                    </>
+                )}
+
+                <Route path="*" element={<Navigate to="/" />} />
+            </Route>
+        </Routes>
+    );
 }
 
+export function AppRouter() { 
+    const { session, isLoading } = useAuth();
+    console.log("ESTADO DO ROUTER:", { session, isLoading });
+    if (isLoading) {
+        return <div>Carregando...</div>;
+    }
+
+    return (
+        <BrowserRouter>
+            {!session ? <AuthRoutes /> : <AppRoutes />}
+        </BrowserRouter>
+    );
+}

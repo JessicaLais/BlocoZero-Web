@@ -29,8 +29,8 @@ export function SignIn() {
 
             const response = await api.post("/user/login", data);
             console.log("RESPOSTA DA API:", response.data);
-            auth.save({ user: response.data });
-            const userRole = response.data.userFunction;
+            auth.save(response.data.user);
+            const userRole = response.data.user.userFunction
             if (userRole === "manager"){
                 navigate("/cadastro-obra");
                 return null;
@@ -48,7 +48,7 @@ export function SignIn() {
             }
             if (error instanceof AxiosError) {
                 console.log("DADOS COMPLETOS DO ERRO:", error.response?.data)
-                return { message: error.response?.data.message };
+                return { message: error.response?.data.error };
             }
             return { message: "Não foi possível conectar ao servidor" };
         }

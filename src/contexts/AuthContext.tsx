@@ -1,26 +1,32 @@
-import { createContext } from "react";
-import { useEffect, useState } from "react";
+import { createContext, useEffect, useState } from "react";
 import { api } from "../services/api";
 
-type AuthContext = {
+type User = {
+    id_user: number;
+    name: string;
+    email: string;
+    userFunction: "manager" | "tender"; 
+}
+
+type AuthContextType = { 
     isLoading: boolean;
-    session: UserAPIResponse | null;
-    save: (data: UserAPIResponse) => void
-    remove: () => void
+    session: User | null; 
+    save: (data: User) => void; 
+    remove: () => void;
 }
 
 const LOCAL_STORAGE_KEY = "@blocoZero";
 
-export const AuthContext = createContext({} as AuthContext);
+export const AuthContext = createContext({} as AuthContextType);
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
     const [isLoading, setIsLoading] = useState(true);
-    const [session, setSession] = useState<UserAPIResponse | null>(null);
+    const [session, setSession] = useState<User | null>(null); 
 
-    function save(data: UserAPIResponse) {
-        localStorage.setItem(`${LOCAL_STORAGE_KEY}:user`, JSON.stringify(data.user));
-        localStorage.setItem(`${LOCAL_STORAGE_KEY}:id_user`, data.user.id_user.toString());
-        api.defaults.headers.common['Authorization'] = `Bearer ${data.user.id_user}`;
+    function save(data: User) {
+        localStorage.setItem(`${LOCAL_STORAGE_KEY}:user`, JSON.stringify(data));
+        localStorage.setItem(`${LOCAL_STORAGE_KEY}:id_user`, data.id_user.toString());
+        api.defaults.headers.common['Authorization'] = `Bearer ${data.id_user}`;
         setSession(data);
     }
 
@@ -28,7 +34,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         setSession(null);
         localStorage.removeItem(`${LOCAL_STORAGE_KEY}:user`);
         localStorage.removeItem(`${LOCAL_STORAGE_KEY}:id_user`);
-        window.location.assign("/");
+        delete api.defaults.headers.common["Authorization"];
+        window.location.assign("/"); 
     }
 
     function loadUser() {
@@ -38,9 +45,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         if (tokenStorage && userStorage) {
             api.defaults.headers.common["Authorization"] = `Bearer ${tokenStorage}`;
             
-            setSession({
-                user: JSON.parse(userStorage)
-            });
+            setSession(JSON.parse(userStorage));
         }
         setIsLoading(false);
     }
