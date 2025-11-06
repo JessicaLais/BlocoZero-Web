@@ -5,8 +5,8 @@ import { useEffect, useState } from "react";
 export default function EstoqueTabela() {
   const [materiais, setMateriais] = useState([]);
 
-  // Endpoint da API REST
-  const endpoint = "/api/materiais";
+  // Endpoint 
+  const endpoint = "http://localhost:8080/stock/stockGetAll";
 
   useEffect(() => {
     async function carregarDados() {
