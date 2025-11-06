@@ -58,7 +58,7 @@ export function FormCadastroObra() {
         if (file) {
             setFormData(prevData => ({
                 ...prevData,
-                photo: file // Guarda o objeto File no estado
+                photo: file 
             }));
         }
     };
@@ -66,8 +66,6 @@ export function FormCadastroObra() {
     async function onSubmit(event: React.FormEvent) {
         event.preventDefault();
         console.log("Dados do formulário antes de validar:", formData);
-
-        // 1. CRIE O FORMDATA
         const dataToSend = new FormData();
 
         try {
