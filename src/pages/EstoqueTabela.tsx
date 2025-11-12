@@ -1,3 +1,4 @@
+import { da } from "zod/v4/locales";
 import ResumoMovimentacao from "../features/gestor/componentes/MovimentacaoEstoque";
 import TabelaMateriais from "../features/gestor/componentes/TabelaMateriais";
 import { useEffect, useState } from "react";
@@ -6,13 +7,14 @@ export default function EstoqueTabela() {
   const [materiais, setMateriais] = useState([]);
 
   // Endpoint 
-  const endpoint = "http://localhost:8080/stock/stockGetAll";
+  const endpoint = "http://localhost:8080/stock/stockGetAvailable";
 
   useEffect(() => {
     async function carregarDados() {
       try {
         const resposta = await fetch(endpoint);
         const dados = await resposta.json();
+        console.log(dados);
         setMateriais(dados);
       } catch (erro) {
         console.error("Erro ao carregar materiais:", erro);
