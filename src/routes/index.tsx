@@ -21,7 +21,7 @@ function AppRoutes() {
                 {session?.userFunction === "manager" && (
                     <>
                         <Route path="/cadastro-obra" element={<CadastroObra />} />
-                        <Route path="/" element={<Navigate to="/cadastro-obra" />} />
+                        <Route path="/" element={<Navigate to="/cabradastro-o" />} />
                     </>
                 )}
 
