@@ -10,6 +10,7 @@ import { EstoqueList } from "../pages/EstoqueList";
 import { EstoqueObra } from "../pages/Estoque";
 import { CadastroObra } from "../pages/CadastroObra";
 import { Orçamento } from "../pages/Orçamento";
+import { Fin } from "../pages/Financeiro";
 
 function AppRoutes() {
     const { session } = useAuth();
@@ -22,6 +23,8 @@ function AppRoutes() {
                     <>
                         <Route path="/cadastro-obra" element={<CadastroObra />} />
                         <Route path="/" element={<Navigate to="/cadastro-obra" />} />
+                        <Route path="/orçamento" element={<Orçamento />} />
+                        <Route path="/financeiro" element={<Fin />} />
                     </>
                 )}
 
