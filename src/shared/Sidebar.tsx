@@ -1,9 +1,9 @@
 import { useState } from 'react';
-import { FaHome, FaCalendarAlt, FaBox, FaChartBar, FaCaretDown, FaCaretUp, FaSignOutAlt, FaBuilding } from 'react-icons/fa';
+import { FaHome, FaCalendarAlt, FaBox, FaChartBar, FaCaretDown, FaCaretUp, FaSignOutAlt } from 'react-icons/fa';
 import Teste from "../assets/Teste.png";
 import { Link, NavLink } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth'; 
-
+import { images } from '../assets';
 const sidebarLinks = [
     {
         label: 'Início',
@@ -43,8 +43,44 @@ const sidebarLinks = [
     {
         label: 'Gerir Obras',
         to: '/cadastro-obra',
-        icon: FaBuilding,
+        icon: images.InicioGestor,
         roles: ['manager'] 
+    },
+    {
+        label: 'Cronograma',
+        to: '#', 
+        icon: images.cronograma,
+        roles: ['manager'] 
+    },
+    {
+        label: 'Orçamento',
+        to: '/orçamento', 
+        icon: images.Orçamento,
+        roles: ['manager'] 
+    },
+    {
+        label: 'Estoque',
+        to: '#', 
+        icon: images.Estoque,
+        roles: ['manager']
+    },
+    {
+        label: 'Solicitações',
+        to: '#', 
+        icon: images.Solicitaçoes,
+        roles: ['manager']
+    },
+    {
+        label: 'Relatórios',
+        to: '#',
+        icon: images.Relatorios,
+        roles: ['manager']
+    },
+    {
+        label: 'Dashboards',
+        to: '#', 
+        icon: images.Dashboards,
+        roles: ['manager']
     }
 ];
 
@@ -90,7 +126,13 @@ export function Sidebar() {
                                     }`
                                     }
                                 >
-                                    <link.icon size={20} />
+                                    {typeof link.icon === 'string' ? (
+                                        
+                                        <img src={link.icon} alt={link.label} className="w-5 h-5" />
+                                    ) : (
+                                        
+                                        <link.icon size={20} />
+                                    )}
                                     <span>{link.label}</span>
                                 </NavLink>
                             ) : (
@@ -101,7 +143,13 @@ export function Sidebar() {
                                     className="flex items-center justify-between w-full p-2 hover:bg-gray-600 transition ease-linear rounded-md"
                                 >
                                     <div className="flex items-center gap-3">
-                                        <link.icon size={20} />
+                                        {typeof link.icon === 'string' ? (
+                                            
+                                            <img src={link.icon} alt={link.label} className="w-5 h-5" />
+                                        ) : (
+                                            
+                                            <link.icon size={20} />
+                                        )}
                                         <span>{link.label}</span>
                                     </div>
                                     {openDropdown === link.label ? <FaCaretUp /> : <FaCaretDown />}
