@@ -1,7 +1,7 @@
 import { Tabs, TabList, Tab, TabPanels, TabPanel } from "./Tabs";
-import { MateriaisPanel } from "./cadastroMateriais/AbaMateriais";
-import { FuncionariosPanel } from "./cadastroMateriais/AbaFuncionarios";
-import { CronogramaPanel } from "./cadastroMateriais/AbaCronograma";
+import { MateriaisPanel } from "./AbaMateriais";
+import { FuncionariosPanel } from "./AbaFuncionarios";
+import { CronogramaPanel } from "./AbaCronograma";
 export function AbasCadastroObra() {
     return (
         <div className="w-full p-4">

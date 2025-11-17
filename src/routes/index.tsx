@@ -9,7 +9,7 @@ import { CardObra } from "../pages/CardObra";
 import { EstoqueList } from "../pages/EstoqueList";
 import { EstoqueObra } from "../pages/Estoque";
 import { CadastroObra } from "../pages/CadastroObra";
-
+import { Orçamento } from "../pages/Orçamento";
 
 function AppRoutes() {
     const { session } = useAuth();
@@ -21,6 +21,7 @@ function AppRoutes() {
                 {session?.userFunction === "manager" && (
                     <>
                         <Route path="/cadastro-obra" element={<CadastroObra />} />
+                        <Route path="/orçamento" element={<Orçamento />} />
                         <Route path="/" element={<Navigate to="/cadastro-obra" />} />
                     </>
                 )}
