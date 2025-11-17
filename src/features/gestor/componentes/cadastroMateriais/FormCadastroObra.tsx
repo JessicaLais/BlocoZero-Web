@@ -1,11 +1,11 @@
 import { useState } from "react";
-import { InputForm } from "./InputForm";
-import { TextareaAuth } from "./TextareaAuth"; 
-import { Button } from "../../home/components/Button";
+import { InputForm } from "../InputForm";
+import { TextareaAuth } from "../TextareaAuth"; 
+import { Button } from "../../../home/components/Button";
 import { AbasCadastroObra } from "./AbasCadastroObra";
 import { z, ZodError } from "zod";
 import { AxiosError } from "axios";
-import { api } from "../../../services/api";
+import { api } from "../../../../services/api";
 import { id } from "zod/v4/locales";
 
 const workSchema = z.object({
