@@ -1,15 +1,17 @@
 import { useState } from "react";
-import { InputForm } from "./InputForm";
-import { TextareaAuth } from "./TextareaAuth"; 
-import { Button } from "../../home/components/Button";
+import { InputForm } from "../InputForm";
+import { TextareaAuth } from "../TextareaAuth"; 
+import { Button } from "../../../home/components/Button";
 import { AbasCadastroObra } from "./AbasCadastroObra";
 import { z, ZodError } from "zod";
 import { AxiosError } from "axios";
-import { api } from "../../../services/api";
+import { api } from "../../../../services/api";
+import { id } from "zod/v4/locales";
 
 const workSchema = z.object({
   title: z.string().min(1, "O nome da obra é obrigatório"),
-  id_enterprise: z.coerce.number().int("O ID da empresa é inválido"),
+  id_entreprise: z.coerce.number().int("O ID da empresa é inválido"),
+  id_manager: z.coerce.number().int("O ID do gerente é inválido"),
   cnpj: z.string().length(14, "O CNPJ deve ter exatamente 14 dígitos"),
   address: z.string().min(1, "O endereço é obrigatório"),
   cep: z.string().length(8, "O CEP deve ter exatamente 8 dígitos"),
@@ -17,15 +19,20 @@ const workSchema = z.object({
   start_time: z.coerce.date({ error: "A data de início é inválida" }),
   end_time: z.coerce.date({ error: "A data de término é inválida" }),
   description: z.string().min(1, "A descrição é obrigatória"),
-  photo_url: z.string().url("URL da foto inválida").optional().or(z.literal('')),
+  photo: z.instanceof(File)
+      .nullable()
+      .optional()
+      .refine((file) => !file || file.size <= 5 * 1024 * 1024, `A imagem deve ter no máximo 5MB.`)
+      .refine((file) => !file || ["image/jpeg", "image/png", "image/webp"].includes(file.type), "Formato de imagem inválido (JPEG, PNG ou WebP)."),
   tender_id: z.coerce.number().int("O ID da empresa é inválido"),
 });
 
 export function FormCadastroObra() {
     const [formData, setFormData] = useState({
         title: "",
-        id_enterprise: "0", 
-        tender_id: "8",
+        id_entreprise: "1", 
+        id_manager: "1",
+        tender_id: "2",
         cnpj: "",
         address: "",
         cep: "",
@@ -33,7 +40,7 @@ export function FormCadastroObra() {
         start_time: "",
         end_time: "",
         description: "",
-        photo_url: "",
+        photo: null as File | null,
         encarregado: "", 
     });
     const [isLoading, setIsLoading] = useState(false);
@@ -46,16 +53,46 @@ export function FormCadastroObra() {
         }));
     };
 
+    const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0] ?? null;
+        if (file) {
+            setFormData(prevData => ({
+                ...prevData,
+                photo: file 
+            }));
+        }
+    };
+
     async function onSubmit(event: React.FormEvent) {
         event.preventDefault();
         console.log("Dados do formulário antes de validar:", formData);
+        const dataToSend = new FormData();
+
         try {
             setIsLoading(true);
+          
             const parsedData = workSchema.parse(formData);
 
-            console.log("Dados validados e prontos para enviar:", parsedData);
+            console.log("Dados validados:", parsedData);
 
-            await api.post("/work/register", parsedData);
+           
+            dataToSend.append('title', parsedData.title);
+            dataToSend.append('id_entreprise', String(parsedData.id_entreprise));
+            dataToSend.append('id_manager', String(parsedData.id_manager));
+            dataToSend.append('cnpj', parsedData.cnpj);
+            dataToSend.append('address', parsedData.address);
+            dataToSend.append('cep', parsedData.cep);
+            dataToSend.append('budget', String(parsedData.budget));
+            dataToSend.append('start_time', parsedData.start_time.toISOString());
+            dataToSend.append('end_time', parsedData.end_time.toISOString());
+            dataToSend.append('description', parsedData.description);
+            dataToSend.append('tender_id', String(parsedData.tender_id));
+            
+            if (parsedData.photo) {
+                dataToSend.append('photo', parsedData.photo);
+            }
+
+            await api.post("/work/register", dataToSend);
             alert("Obra cadastrada com sucesso!");
 
         } catch (error) {
@@ -88,7 +125,13 @@ export function FormCadastroObra() {
             <div className="flex flex-row px-4 items-center gap-6">
                 <InputForm legend="Data de início:" name="start_time" type="date" value={formData.start_time} onChange={handleChange} containerClassName="w-1/3" />
                 <InputForm legend="Previsão de término:" name="end_time" type="date" value={formData.end_time} onChange={handleChange} containerClassName="w-1/3" />
-                <InputForm legend="Foto da obra:" name="photo_url" value={formData.photo_url} onChange={handleChange} containerClassName="flex-1" />
+                <InputForm 
+                    legend="Foto da obra:" 
+                    name="photo"         
+                    type="file"         
+                    onChange={handleFileChange} 
+                    containerClassName="flex-1" 
+                />
             </div>
             <div className="px-4 flex justify-between items-end gap-6">
                 <TextareaAuth legend="Descrição:" name="description" value={formData.description} onChange={handleChange} />

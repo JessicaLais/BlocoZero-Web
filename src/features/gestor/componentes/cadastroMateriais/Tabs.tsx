@@ -1,7 +1,7 @@
 // components/Tabs.tsx
 import  { useState, createContext, useContext } from 'react';
 import type { ReactNode } from 'react';
-import { classMerge } from "../../../utils/classMerge";
+import { classMerge } from "../../../../utils/classMerge";
 
 interface TabsContextType {
     activeTab: string;

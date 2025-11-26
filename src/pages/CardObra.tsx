@@ -10,12 +10,14 @@ export function CardObra(){
     useEffect(() => {
        if (!id) return;
        const getWork = async () => {
-         try {
-             const response = await fetch(`http://localhost:8080/work/list/specificWork/${id}`);
+        try {
+             const response = await fetch(`http://localhost:8080/work/specific/${id}`);
              const data = await response.json();
-             const workData = data.getSpecificWork.work;
+             const workData = data.work 
+             console.log("Variável workData:", workData)
+             
              setWork(workData); 
-             console.log(workData); 
+             console.log("Objeto data completo:", data); 
 
          } catch(error) {
              console.error("Erro ao buscar obra:", error);
