@@ -1,9 +1,8 @@
-import { da } from "zod/v4/locales";
-import ResumoMovimentacao from "../features/gestor/componentes/MovimentacaoEstoque";
-import TabelaMateriais from "../features/gestor/componentes/TabelaMateriais";
+import ResumoMovimentacao from "../features/gestor/componentes/estoque-tabela/MovimentacaoEstoque";
+import TabelaMateriais from "../features/gestor/componentes/estoque-tabela/TabelaMateriais";
 import { useEffect, useState } from "react";
 
-export default function EstoqueTabela() {
+export default function EstoqueTab() {
   const [materiais, setMateriais] = useState([]);
 
   // Endpoint 
