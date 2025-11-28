@@ -1,8 +1,8 @@
 // Em src/routes/index.tsx
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom"; // <-- TUDO DE "react-router-dom"
 import { useAuth } from "../hooks/useAuth.tsx";
-
 import { AppLayout } from "../shared/AppLayout";
+
 import { AuthRoutes } from "./AuthRoutes.tsx"; 
 import { Home } from "../pages/HomePage";
 import { CardObra } from "../pages/CardObra";
@@ -11,6 +11,7 @@ import { EstoqueObra } from "../pages/Estoque";
 import { CadastroObra } from "../pages/CadastroObra";
 import { Orçamento } from "../pages/Orçamento";
 import { Fin } from "../pages/Financeiro";
+
 
 function AppRoutes() {
     const { session } = useAuth();
@@ -27,7 +28,6 @@ function AppRoutes() {
                         <Route path="/financeiro" element={<Fin />} />
                     </>
                 )}
-
                 {session?.userFunction === "tender" && (
                     <>
                         <Route path="/work" element={<Home />} />
