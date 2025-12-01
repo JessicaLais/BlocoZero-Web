@@ -1,5 +1,7 @@
 import { useState, useMemo, useEffect } from 'react';
-import { DollarSign, Binoculars } from 'lucide-react';
+import IconePesquisa from '../assets/search-icon.svg';
+import IconeDinheiro from '../assets/money-icon.svg';
+
 import { InfoCard } from '../features/financeiro/components/InfoCard';
 import { EtapaRow } from '../features/financeiro/components/EtapaRow';
 import { TotalsTable } from '../features/financeiro/components/TotalsTable';
@@ -121,15 +123,15 @@ export function Fin() {
         {/* HEADER */}
         <section className="flex flex-col md:flex-row items-end justify-start gap-4 mb-8 flex-wrap">
           <div className="flex gap-4 md:gap-6 overflow-x-auto pb-2 max-w-full">
-             <InfoCard title="Valor do contrato" value={valorContrato} icon={<DollarSign size={48} />} />
-             <InfoCard title="Mês atual" value="R$ 0,00" icon={<DollarSign size={48} />} />
-             <InfoCard title="Disponível" value={valorContrato} icon={<DollarSign size={48} />} />
+             <InfoCard title="Valor do contrato" value={valorContrato} icon={<img src={IconeDinheiro} alt="Dinheiro" className="w-12 h-12" />}/>
+             <InfoCard title="Mês atual" value="R$ 0,00" icon={<img src={IconeDinheiro} alt="Dinheiro" className="w-12 h-12" />} />
+             <InfoCard title="Disponível" value={valorContrato} icon={<img src={IconeDinheiro} alt="Dinheiro" className="w-12 h-12" />} />
           </div>
 
           <div className="relative w-72 pb-1">
-            <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none pb-1">
-              <Binoculars size={20} className="text-gray-400" />
-            </div>
+          <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none pb-1">
+          <img src={IconePesquisa} alt="Pesquisar" className="w-5 h-5" />
+          </div>
             <input
               type="text"
               placeholder="Pesquisar"
