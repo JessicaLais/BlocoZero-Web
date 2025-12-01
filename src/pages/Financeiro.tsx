@@ -1,10 +1,11 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { DollarSign, Binoculars } from 'lucide-react';
 import { InfoCard } from '../features/financeiro/components/InfoCard';
 import { EtapaRow } from '../features/financeiro/components/EtapaRow';
 import { TotalsTable } from '../features/financeiro/components/TotalsTable';
+import { financeiroService } from '../services/financeiroService';
+import type { EtapaDTO } from '../dtos/financeiro';
 
-// --- TIPO DEFINIDO LOCALMENTE ---
 type MonthData = {
   percent: string;
   value: string;
@@ -23,8 +24,13 @@ const generateMonthHeaders = (startMonth: number, startYear: number, count: numb
 
 export function Fin() {
   const [searchTerm, setSearchTerm] = useState("");
-  const valorFixo = "R$ 0.000.000,00";
+  
+  // ESTADOS
+  const [etapas, setEtapas] = useState<EtapaDTO[]>([]);
+  const [valorContrato, setValorContrato] = useState("R$ 0,00");
+  const [loading, setLoading] = useState(true);
 
+  const WORK_ID = 1; 
   const projectConfig = { startMonth: 0, startYear: 2025, durationMonths: 12 };
 
   const headers = useMemo(() => 
@@ -32,68 +38,41 @@ export function Fin() {
     []
   );
 
-  // --- MOCK DATA ---
-  const mockData = [
-    {
-      etapa: 'Planejamento e Preparação',
-      total: '16.389,49',
-      dadosMensais: { 0: { percent: '100%', value: '16.389,49' } }
-    },
-    {
-      etapa: 'Serviços Preliminares',
-      total: '4.678,41',
-      dadosMensais: { 0: { percent: '100%', value: '4.678,41' } }
-    },
-    {
-      etapa: 'Infraestrutura',
-      total: '6.178,89',
-      dadosMensais: { 
-        0: { percent: '20%', value: '1.235,78' }, 
-        1: { percent: '80%', value: '4.943,11' } 
+  useEffect(() => {
+    const fetchDados = async () => {
+      try {
+        setLoading(true);
+        
+        // 1. Busca Obra
+        const obra = await financeiroService.getObra(WORK_ID);
+        if (obra) {
+          const valor = obra.budget ?? 0;
+          setValorContrato(valor.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }));
+        }
+
+        // 2. Busca Etapas
+        const listaEtapas = await financeiroService.getEtapas(WORK_ID);
+        setEtapas(Array.isArray(listaEtapas) ? listaEtapas : []);
+
+      } catch (error) {
+        console.error("Erro ao carregar dados financeiros:", error);
+        setEtapas([]);
+      } finally {
+        setLoading(false);
       }
-    },
-    {
-      etapa: 'Alvenaria e Vedação',
-      total: '45.783,90',
-      dadosMensais: {
-        1: { percent: '55%', value: '25.181,15' },
-        2: { percent: '45%', value: '20.603,76' },
-        3: { percent: '5%', value: '2.289,20' }
-      }
-    },
-    {
-      etapa: 'Cobertura',
-      total: '34.893,90',
-      dadosMensais: {
-        2: { percent: '50%', value: '17.446,95' },
-        3: { percent: '50%', value: '17.446,95' }
-      }
-    },
-    {
-      etapa: 'Instalações',
-      total: '9.353,87',
-      dadosMensais: {
-        4: { percent: '53%', value: '4.957,55' },
-        5: { percent: '37%', value: '3.461,93' },
-        6: { percent: '10%', value: '935,39' }
-      }
-    },
-    {
-      etapa: 'Acabamento',
-      total: '12.732,67',
-      dadosMensais: {
-        6: { percent: '47%', value: '5.983,35' },
-        7: { percent: '53%', value: '6.749,32' }
-      }
-    },
-    {
-      etapa: 'Esquadrias e Vidros',
-      total: '6.178,89',
-      dadosMensais: {
-        7: { percent: '100%', value: '6.178,89' }
-      }
-    }
-  ];
+    };
+
+    fetchDados();
+  }, []);
+
+  // --- PREPARAR DADOS PARA TABELA ---
+  const tableData = useMemo(() => {
+    return (etapas || []).map(etapa => ({
+      etapa: etapa.name,
+      total: "R$ 0,00", 
+      dadosMensais: {} 
+    }));
+  }, [etapas]);
 
   const buildRowData = (dadosMensais: any): MonthData[] => {
     const dados = dadosMensais || {}; 
@@ -102,6 +81,7 @@ export function Fin() {
     });
   };
 
+  // --- CÁLCULO DOS TOTAIS ---
   const calculateTotals = () => {
     const totaisMensais = new Array(projectConfig.durationMonths).fill(0);
     let acumulado = 0;
@@ -109,9 +89,9 @@ export function Fin() {
     
     for (let i = 0; i < projectConfig.durationMonths; i++) {
       let somaMes = 0;
-      mockData.forEach(row => {
+      tableData.forEach(row => {
         // @ts-ignore
-        const cellData = row.dadosMensais[i];
+        const cellData = row.dadosMensais?.[i]; 
         if (cellData && cellData.value) {
           try {
             const valorLimpo = cellData.value.replace(/\./g, '').replace(',', '.');
@@ -130,20 +110,20 @@ export function Fin() {
 
   const { totaisMensais, totaisAcumulados } = calculateTotals();
 
+  if (loading) {
+    return <div className="min-h-screen bg-[#F5F5F5] p-8 flex items-center justify-center">Carregando...</div>;
+  }
+
   return (
-    // AJUSTE 1: 'overflow-x-hidden' no body para evitar scroll duplo indesejado na página inteira
     <div className="min-h-screen bg-[#F5F5F5] p-4 md:p-8 overflow-x-hidden">
-      
-      {/* AJUSTE 2: 'w-full' garante que usa a tela toda do notebook, mas 'max-w-[1600px]' segura em telas gigantes */}
       <main className="w-full max-w-[1600px] mx-auto">
         
         {/* HEADER */}
-        {/* AJUSTE 3: 'flex-wrap' permite que, se a tela for MUITO pequena (celular), os itens quebrem linha suavemente em vez de sumir */}
         <section className="flex flex-col md:flex-row items-end justify-start gap-4 mb-8 flex-wrap">
           <div className="flex gap-4 md:gap-6 overflow-x-auto pb-2 max-w-full">
-             <InfoCard title="Valor do contrato" value={valorFixo} icon={<DollarSign size={48} />} />
-             <InfoCard title="Mês atual" value={valorFixo} icon={<DollarSign size={48} />} />
-             <InfoCard title="Disponível" value={valorFixo} icon={<DollarSign size={48} />} />
+             <InfoCard title="Valor do contrato" value={valorContrato} icon={<DollarSign size={48} />} />
+             <InfoCard title="Mês atual" value="R$ 0,00" icon={<DollarSign size={48} />} />
+             <InfoCard title="Disponível" value={valorContrato} icon={<DollarSign size={48} />} />
           </div>
 
           <div className="relative w-72 pb-1">
@@ -160,7 +140,7 @@ export function Fin() {
           </div>
         </section>
 
-        {/* TABELA - O 'overflow-x-auto' aqui é o herói que permite rolar a tabela em telas menores */}
+        {/* TABELA */}
         <section className="border border-gray-300 rounded-lg overflow-hidden shadow-sm bg-white">
           <div className="overflow-x-auto">
             <table className="w-full text-left border-collapse">
@@ -180,14 +160,23 @@ export function Fin() {
                 </tr>
               </thead> 
               <tbody>
-                {mockData.map((data, index) => (
-                  <EtapaRow 
-                    key={index}
-                    etapaNome={data.etapa}
-                    totalEtapa={data.total}
-                    meses={buildRowData(data.dadosMensais)}
-                  />
-                ))}
+                {tableData.length > 0 ? (
+                  tableData.map((data, index) => (
+                    <EtapaRow 
+                      key={index}
+                      etapaNome={data.etapa}
+                      totalEtapa={data.total}
+                      meses={buildRowData(data.dadosMensais)}
+                    />
+                  ))
+                ) : (
+                  <tr>
+                    <td colSpan={14} className="p-8 text-center text-gray-500">
+                      Nenhuma etapa encontrada para esta obra (ID {WORK_ID}). <br/>
+                      Verifique se você cadastrou etapas no banco de dados.
+                    </td>
+                  </tr>
+                )}
               </tbody>
             </table>
           </div>
