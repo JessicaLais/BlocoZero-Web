@@ -12,7 +12,6 @@ import { CadastroObra } from "../pages/CadastroObra";
 import { Orçamento } from "../pages/Orçamento";
 import { Fin } from "../pages/Financeiro";
 
-
 function AppRoutes() {
     const { session } = useAuth();
 

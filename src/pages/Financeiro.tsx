@@ -1,4 +1,5 @@
 import { useState, useMemo, useEffect } from 'react';
+// IMPORTAÇÕES DOS SEUS ÍCONES SVG
 import IconePesquisa from '../assets/search-icon.svg';
 import IconeDinheiro from '../assets/money-icon.svg';
 
@@ -8,6 +9,7 @@ import { TotalsTable } from '../features/financeiro/components/TotalsTable';
 import { financeiroService } from '../services/financeiroService';
 import type { EtapaDTO } from '../dtos/financeiro';
 
+// --- TIPOS AUXILIARES ---
 type MonthData = {
   percent: string;
   value: string;
@@ -27,11 +29,12 @@ const generateMonthHeaders = (startMonth: number, startYear: number, count: numb
 export function Fin() {
   const [searchTerm, setSearchTerm] = useState("");
   
-  // ESTADOS
+  // ESTADOS COM DADOS DA API
   const [etapas, setEtapas] = useState<EtapaDTO[]>([]);
   const [valorContrato, setValorContrato] = useState("R$ 0,00");
   const [loading, setLoading] = useState(true);
 
+  // ID DA OBRA FIXO (Temporário)
   const WORK_ID = 1; 
   const projectConfig = { startMonth: 0, startYear: 2025, durationMonths: 12 };
 
@@ -40,6 +43,7 @@ export function Fin() {
     []
   );
 
+  // --- BUSCAR DADOS DA API (BLINDADO) ---
   useEffect(() => {
     const fetchDados = async () => {
       try {
@@ -123,15 +127,17 @@ export function Fin() {
         {/* HEADER */}
         <section className="flex flex-col md:flex-row items-end justify-start gap-4 mb-8 flex-wrap">
           <div className="flex gap-4 md:gap-6 overflow-x-auto pb-2 max-w-full">
+             {/* AQUI ESTÃO OS SEUS ÍCONES SVG */}
              <InfoCard title="Valor do contrato" value={valorContrato} icon={<img src={IconeDinheiro} alt="Dinheiro" className="w-12 h-12" />}/>
              <InfoCard title="Mês atual" value="R$ 0,00" icon={<img src={IconeDinheiro} alt="Dinheiro" className="w-12 h-12" />} />
              <InfoCard title="Disponível" value={valorContrato} icon={<img src={IconeDinheiro} alt="Dinheiro" className="w-12 h-12" />} />
           </div>
 
           <div className="relative w-72 pb-1">
-          <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none pb-1">
-          <img src={IconePesquisa} alt="Pesquisar" className="w-5 h-5" />
-          </div>
+            <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none pb-1">
+              {/* ÍCONE SVG DE PESQUISA */}
+              <img src={IconePesquisa} alt="Pesquisar" className="w-5 h-5" />
+            </div>
             <input
               type="text"
               placeholder="Pesquisar"
