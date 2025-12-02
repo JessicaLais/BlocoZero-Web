@@ -2,6 +2,9 @@ import { Tabs, TabList, Tab, TabPanels, TabPanel } from "./Tabs";
 import { MateriaisPanel } from "./AbaMateriais";
 import { FuncionariosPanel } from "./AbaFuncionarios";
 import { CronogramaPanel } from "./AbaCronograma";
+import { TiposPanel } from "./AbaTipo";
+import { CategoriasPanel } from "./AbaCategoria";
+
 export function AbasCadastroObra() {
     return (
         <div className="w-full p-4">
@@ -13,6 +16,8 @@ export function AbasCadastroObra() {
                                 <Tab label="materiais">Materiais</Tab>
                                 <Tab label="funcionarios">Funcionários</Tab>
                                 <Tab label="cronograma">Cronograma inicial</Tab>
+                                <Tab label="tipos">Tipos</Tab>
+                                <Tab label="categorias">Categorias</Tab>
                             </div>
                             
 
@@ -28,6 +33,12 @@ export function AbasCadastroObra() {
                         </TabPanel>
                         <TabPanel whenActive="cronograma">
                             <CronogramaPanel />
+                        </TabPanel>
+                        <TabPanel whenActive="tipos">
+                            <TiposPanel />
+                        </TabPanel>
+                        <TabPanel whenActive="categorias">
+                            <CategoriasPanel />
                         </TabPanel>
                     </TabPanels>
                 </Tabs>
