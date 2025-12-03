@@ -9,9 +9,9 @@ import incluirSvg from "../../../../assets/incluir.svg";
 import deletarSvg from "../../../../assets/deletar.svg";
 import { api } from "../../../../services/api";
 
+// Interface baseada na resposta da API
 interface StockData {
-    id_item?: number; 
-    id_stock?: number; 
+    id_stock: number;
     id_work: number;
     id_type: number;
     id_category: number;
@@ -21,11 +21,13 @@ interface StockData {
     stockQuantity: number;
     weightLength: number;
     minQuantity: number;
-    costUnit: number; 
-    
+    costUnit: number;
+    // O backend atual não está mandando o include da categoria, 
+    // então o campo category? pode vir undefined.
     category?: { name: string };
 }
 
+// Schema de validação
 const stockSchema = z.object({
     id_work: z.coerce.number().min(1, "ID da obra inválido"),
     id_type: z.coerce.number(),
@@ -36,11 +38,10 @@ const stockSchema = z.object({
     stockQuantity: z.coerce.number().min(0),
     weightLength: z.coerce.number().min(0),
     minQuantity: z.coerce.number().min(0),
-    costUnit: z.coerce.number().min(0, "O custo deve ser maior ou igual a 0"),
+    costUnit: z.coerce.number().min(0),
 });
 
 export function MateriaisPanel() {
-    
     const CURRENT_WORK_ID = 1; 
 
     const [isVisible, setIsVisible] = useState(false);
@@ -61,6 +62,33 @@ export function MateriaisPanel() {
         costUnit: "0.00",
     });
 
+    // --- 1. BUSCAR (GET) ---
+    const fetchStocks = async () => {
+        try {
+            // CORREÇÃO: Nova rota de listagem conforme seu Router
+            const response = await api.get(`/stock/list/${CURRENT_WORK_ID}`);
+            const data = response.data;
+
+            // O controller retorna { stock: [...] }
+            if (data && data.stock) {
+                setStocks(data.stock);
+            } else if (Array.isArray(data)) {
+                setStocks(data);
+            } else {
+                setStocks([]);
+            }
+        } catch (error) {
+            console.error("Erro ao buscar estoque:", error);
+            setStocks([]);
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    useEffect(() => {
+        fetchStocks();
+    }, []);
+
     const resetForm = () => {
         setFormData({
             id_work: String(CURRENT_WORK_ID),
@@ -76,52 +104,6 @@ export function MateriaisPanel() {
         });
     };
 
-   
-    const fetchStocks = async () => {
-        try {
-            const response = await api.get(`/stock/${CURRENT_WORK_ID}`);
-            
-            
-            console.log("RESPOSTA REAL DO BACKEND:", JSON.stringify(response.data, null, 2));
-
-            const data = response.data;
-
-            
-            if (data.error) {
-                alert(`Erro vindo do Backend: ${data.error}`);
-                setStocks([]);
-                return;
-            }
-
-           
-            if (Array.isArray(data)) {
-                // Formato: [ ... ]
-                setStocks(data);
-            } else if (data.stock && Array.isArray(data.stock)) {
-                
-                setStocks(data.stock);
-            } else if (data.stock_items && Array.isArray(data.stock_items)) {
-                
-                setStocks(data.stock_items);
-            } else {
-                console.error("Não encontrei uma lista válida no objeto:", data);
-                setStocks([]);
-            }
-
-        } catch (error) {
-            console.error("Erro na requisição:", error);
-            if (error instanceof AxiosError) {
-                console.log("Detalhes do erro:", error.response?.data);
-            }
-        } finally {
-            setLoading(false);
-        }
-    };
-
-    useEffect(() => {
-        fetchStocks();
-    }, []);
-
     const handleInputChange = (event: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
         const { name, value } = event.target;
         setFormData((prev) => ({ ...prev, [name]: value }));
@@ -135,9 +117,7 @@ export function MateriaisPanel() {
 
     const handleEditClick = () => {
         if (!selectedId) return alert("Selecione um item para editar.");
-        
-        
-        const item = stocks.find((s) => (s.id_stock === selectedId || s.id_item === selectedId));
+        const item = stocks.find((s) => s.id_stock === selectedId);
         
         if (item) {
             setFormData({
@@ -156,59 +136,50 @@ export function MateriaisPanel() {
         }
     };
 
-    
     const handleDeleteClick = async () => {
         if (!selectedId) return alert("Selecione um item para excluir.");
-        
-        
-        if (!window.confirm("Tem certeza que deseja remover este item do estoque?")) return;
+        if (!window.confirm("Deseja remover este item do estoque?")) return;
 
         try {
             setLoading(true);
-            
-            
             await api.delete(`/stock/delete/${selectedId}`); 
-            
             alert("Item removido com sucesso!");
-            
-            
             setSelectedId(null);
             setIsVisible(false);
             resetForm();
-            fetchStocks(); 
-
+            fetchStocks();
         } catch (error) {
-            console.error("Erro ao excluir:", error);
-            if (error instanceof AxiosError) {
-                alert(error.response?.data?.error || "Erro ao excluir item.");
-            } else {
-                alert("Erro desconhecido ao excluir.");
-            }
+            console.error(error);
+            alert("Erro ao excluir.");
         } finally {
             setLoading(false);
         }
     };
 
-   
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         try {
             setLoading(true);
             
-           
             const data = stockSchema.parse(formData);
 
+            // Payload ajustado para o seu service (que espera 'category' e 'id_category')
+            const payload = {
+                ...data,
+                // O service.js na linha 19 busca 'data.category' no getCategoryById
+                // Mas na linha 82 (create) usa 'id_category'. Enviamos os dois por segurança.
+                category: data.id_category, 
+                id_category: data.id_category
+            };
+
             if (selectedId) {
-                
-                await api.put(`/stock/update/${selectedId}`, data);
-                alert("Item atualizado com sucesso!");
+                await api.put(`/stock/update/${selectedId}`, payload);
+                alert("Estoque atualizado!");
             } else {
-                // --- MODO CRIAÇÃO (POST) ---
-                await api.post("/stock/create", data);
+                await api.post("/stock/create", payload);
                 alert("Item criado com sucesso!");
             }
 
-            // Fecha o formulário e atualiza a lista
             setIsVisible(false);
             resetForm();
             setSelectedId(null);
@@ -225,9 +196,9 @@ export function MateriaisPanel() {
     };
 
     return (
-        <div className="overflow-y-scroll h-[200px]">
+        <div className="overflow-y-scroll h-[350px] pb-4">
             {isVisible && (
-                <div className="w-full space-y-2 py-2 px-4 bg-white rounded-lg shadow-md mb-4">
+                <div className="w-full space-y-2 py-2 px-4 bg-white rounded-lg shadow-md mb-4 border border-gray-200">
                     <div className="flex flex-row items-center gap-6">
                         <InputForm 
                             legend="Código:" 
@@ -245,11 +216,10 @@ export function MateriaisPanel() {
                             containerClassName="flex-1"
                         >
                             <option value="">Selecione...</option>
+                            {/* IDs fixos para teste - idealmente viriam de um fetchCategorias */}
                             <option value="1">Estrutura (ID 1)</option>
                             <option value="2">Acabamento (ID 2)</option>
                         </SelectForm>
-                        
-                        
                     </div>
 
                     <div className="flex flex-row items-center gap-6">
@@ -312,82 +282,71 @@ export function MateriaisPanel() {
                         />
                     </div>
 
-                    <div className="flex gap-2 mt-2">
-                        <Button onClick={handleSubmit} className="px-4 h-[26px] text-sm bg-gray-350 text-black hover:bg-gray-300 rounded-none border-1 border-gray-400">
-                            {selectedId ? "Salvar (Indisponível)" : "Confirmar Inclusão"}
+                    <div className="flex gap-2 mt-2 justify-end">
+                        <Button onClick={handleSubmit} className="px-4 py-1 text-sm bg-blue-600 text-white hover:bg-blue-700 rounded border border-blue-800">
+                            {selectedId ? "Salvar Alterações" : "Confirmar Inclusão"}
                         </Button>
-                        <Button onClick={() => setIsVisible(false)} className="px-4 h-[26px] text-sm bg-red-200 text-red-800 hover:bg-red-300 rounded-none border-1 border-gray-400">
+                        <Button onClick={() => setIsVisible(false)} className="px-4 py-1 text-sm bg-red-200 text-red-800 hover:bg-red-300 rounded border border-gray-400">
                             Cancelar
                         </Button>
                     </div>
                 </div>
             )}
 
-            <div className="flex justify-end mt-4 gap-2">
-                <Button onClick={handleNewClick} className="flex items-center gap-2 px-4 h-[26px] text-sm bg-gray-350 text-black hover:bg-gray-300 rounded-none border-1 border-gray-400">
-                    <img src={incluirSvg} alt="incluir" />Incluir
+            <div className="flex justify-end mt-2 gap-2">
+                <Button onClick={handleNewClick} className="flex items-center gap-2 px-3 py-1 text-sm bg-gray-350 border border-gray-400 hover:bg-gray-300">
+                    <img src={incluirSvg} alt="incluir" className="w-4 h-4"/> Incluir
                 </Button>
                 <Button 
                     onClick={handleEditClick} 
-                    className={`flex items-center gap-2 px-4 h-[26px] text-sm rounded-none border-1 border-gray-400 ${selectedId ? 'bg-blue-100 text-blue-800 hover:bg-blue-200' : 'bg-gray-350 opacity-50'}`}
+                    className={`flex items-center gap-2 px-3 py-1 text-sm border border-gray-400 ${selectedId ? 'bg-blue-100 hover:bg-blue-200' : 'bg-gray-350 opacity-50'}`}
                 >
-                    <img src={editarSvg} alt="editar" />Editar
+                    <img src={editarSvg} alt="editar" className="w-4 h-4"/> Editar
                 </Button>
                 <Button 
                     onClick={handleDeleteClick} 
-                    className={`flex items-center gap-2 px-4 h-[26px] text-sm rounded-none border-1 border-gray-400 ${selectedId ? 'bg-red-100 text-red-800 hover:bg-red-200' : 'bg-gray-350 opacity-50'}`}
+                    className={`flex items-center gap-2 px-3 py-1 text-sm border border-gray-400 ${selectedId ? 'bg-red-100 hover:bg-red-200' : 'bg-gray-350 opacity-50'}`}
                 >
-                    <img src={deletarSvg} alt="deletar" />Excluir
+                    <img src={deletarSvg} alt="deletar" className="w-4 h-4"/> Excluir
                 </Button>
             </div>
 
-            <table className="bg-white border-1 border-gray-500 w-full text-left mt-2">
+            <table className="bg-white border border-gray-300 w-full text-left mt-2 text-sm">
                 <thead> 
-                    <tr className="bg-gray-300">
-                        <th className="px-1 border-1">Código</th>
-                        <th className="px-1 border-1">Nome</th>
-                        <th className="px-1 border-1">Categoria</th>
-                        <th className="px-1 border-1">Unidade</th>
-                        <th className="px-1 border-1">Qtd Atual</th>
-                        <th className="px-1 border-1">Minimo</th>
-                        <th className="px-1 border-1">Custo Un.</th>
+                    <tr className="bg-gray-200">
+                        <th className="px-2 py-1 border border-gray-300">Código</th>
+                        <th className="px-2 py-1 border border-gray-300">Nome</th>
+                        <th className="px-2 py-1 border border-gray-300">Categoria</th>
+                        <th className="px-2 py-1 border border-gray-300">Unidade</th>
+                        <th className="px-2 py-1 border border-gray-300">Qtd Atual</th>
+                        <th className="px-2 py-1 border border-gray-300">Minimo</th>
+                        <th className="px-2 py-1 border border-gray-300">Custo Un.</th>
                     </tr>
                 </thead>
                 <tbody>
                     {stocks.length === 0 && !loading && (
-                        <tr><td colSpan={7} className="text-center p-2">Nenhum item encontrado.</td></tr>
+                        <tr><td colSpan={7} className="text-center p-2 text-gray-500">Nenhum item encontrado.</td></tr>
                     )}
-                    {stocks.map((item) => {
-                        // O ID pode vir como id_stock ou id_item, garantindo que pegamos um
-                        const itemId = item.id_stock || item.id_item || 0;
-                        return (
-                            <tr 
-                                key={itemId}
-                                onClick={() => {
-                                    if (selectedId === itemId) {
-                                        setSelectedId(null);
-                                        setIsVisible(false);
-                                        resetForm();
-                                    } else {
-                                        setSelectedId(itemId);
-                                        setIsVisible(false);
-                                        resetForm();
-                                    }
-                                }}
-                                className={`text-sm border-b-1 border-gray-500 cursor-pointer hover:bg-gray-200 ${selectedId === itemId ? 'bg-blue-200' : ''}`}
-                            > 
-                                <td className="px-2 border-1">{item.code}</td>
-                                <td className="px-2 border-1">{item.name}</td>
-                                <td className="px-2 border-1">{item.category?.name || item.id_category}</td>
-                                <td className="px-2 border-1">{item.unitMeasure}</td>
-                                <td className="px-2 border-1">{item.stockQuantity}</td>
-                                <td className="px-2 border-1">{item.minQuantity}</td>
-                                <td className="px-2 border-1">
-                                    {item.costUnit ? `R$ ${Number(item.costUnit).toFixed(2)}` : '-'}
-                                </td>
-                            </tr> 
-                        );
-                    })}
+                    {stocks.map((item) => (
+                        <tr 
+                            key={item.id_stock}
+                            onClick={() => setSelectedId(selectedId === item.id_stock ? null : item.id_stock)}
+                            className={`cursor-pointer hover:bg-blue-50 ${selectedId === item.id_stock ? 'bg-blue-200' : ''}`}
+                        > 
+                            <td className="px-2 py-1 border border-gray-300">{item.code}</td>
+                            <td className="px-2 py-1 border border-gray-300">{item.name}</td>
+                            <td className="px-2 py-1 border border-gray-300">
+                                {/* Fallback para ID caso o nome não venha do backend */}
+                                {item.category?.name || `ID ${item.id_category}`}
+                            </td>
+                            <td className="px-2 py-1 border border-gray-300">{item.unitMeasure}</td>
+                            <td className="px-2 py-1 border border-gray-300">{item.stockQuantity}</td>
+                            <td className="px-2 py-1 border border-gray-300">{item.minQuantity}</td>
+                            <td className="px-2 py-1 border border-gray-300">
+                                {item.costUnit ? `R$ ${Number(item.costUnit).toFixed(2)}` : '-'}
+                            </td>
+                        </tr> 
+                    ))}
                 </tbody>
             </table>
         </div>
