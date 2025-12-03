@@ -257,7 +257,7 @@ export function TiposPanel() {
                     }
                 }}
                 // Estilo condicional: Azul se selecionado, Cinza no Hover
-                className={`text-sm border-b-1 border-gray-500 cursor-pointer hover:bg-gray-200 ${selectedId === type.id ? 'bg-blue-200' : ''}`}
+                className={`text-sm border-b-1 border-gray-500 cursor-pointer hover:bg-gray-50 ${selectedId === type.id ? 'bg-blue-200' : ''}`}
               >
                 <td className="px-2 border-1">{type.id}</td>
                 <td className="px-2 border-1">{type.name}</td>

@@ -182,16 +182,16 @@ export function CategoriasPanel() {
             />
           </div>
 
-          <div className="flex gap-2 mt-2">
+          <div className="flex gap-2 mt-2 justify-end">
             <Button
               className="px-4 h-[26px] text-sm bg-gray-350 text-black hover:bg-gray-300 border border-gray-400"
               onClick={handleSubmit}
               isLoading={loading}
             >
-              Confirmar
+              {selectedId ? "Salvar Alterações" : "Confirmar"}
             </Button>
             <Button
-              className="px-4 h-[26px] text-sm bg-red-100 text-red-600 hover:bg-red-200 border border-red-300"
+              className="px-4 h-[26px] text-sm bg-red-100 text-red-800 hover:bg-red-200 border border-red-300"
               onClick={() => { setIsVisible(false); resetForm(); }}
               type="button"
             >
@@ -259,7 +259,7 @@ export function CategoriasPanel() {
                         resetForm();
                     }
                 }}
-                className={`text-sm border-b-1 border-gray-500 cursor-pointer hover:bg-gray-200 ${selectedId === category.id ? 'bg-blue-200' : ''}`}
+                className={`text-sm border-b-1 border-gray-500 cursor-pointer hover:bg-gray-50 ${selectedId === category.id ? 'bg-blue-200' : ''}`}
               >
                 <td className="px-2 border-1">{category.id}</td>
                 <td className="px-2 border-1 font-medium">{category.name}</td>

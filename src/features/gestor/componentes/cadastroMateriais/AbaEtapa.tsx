@@ -47,7 +47,6 @@ export function CronogramaPanel({ onSelectStage }: CronogramaPanelProps) {
         try {
             setLoading(true);
             const response = await api.get(`/stage/list/${CURRENT_WORK_ID}`);
-            console.log(response.data);
             if (response.data && response.data.stages) {
                 setStages(response.data.stages);
             } else {
@@ -128,66 +127,100 @@ export function CronogramaPanel({ onSelectStage }: CronogramaPanelProps) {
 
     return (
         <div className="overflow-y-scroll h-[250px]">
+            {/* FORMULÁRIO */}
             {isVisible && (
                 <div className="w-full space-y-2 py-2 px-4 bg-white rounded-lg shadow-md mb-4 border border-gray-200">
+                    <h3 className="text-sm font-bold text-gray-700 mb-2">
+                        {selectedId ? "Editar Etapa" : "Nova Etapa"}
+                    </h3>
                     <div className="flex gap-4">
                         <InputForm legend="Nome da Etapa:" name="name" value={formData.name} onChange={handleInputChange} containerClassName="flex-1" />
                         <InputForm legend="Início:" type="date" name="expStartDate" value={formData.expStartDate} onChange={handleInputChange} containerClassName="w-1/4" />
                         <InputForm legend="Fim:" type="date" name="expEndDate" value={formData.expEndDate} onChange={handleInputChange} containerClassName="w-1/4" />
                     </div>
-                    <div className="flex gap-2 mt-2">
-                        <Button onClick={handleSubmit} className="px-4 py-1 text-sm bg-gray-350 hover:bg-gray-300 border border-gray-400">Salvar</Button>
-                        <Button onClick={() => setIsVisible(false)} className="px-4 py-1 text-sm bg-red-200 hover:bg-red-300 border border-red-400">Cancelar</Button>
+                    
+                    <div className="flex gap-2 mt-2 justify-end">
+                        <Button 
+                            onClick={handleSubmit} 
+                            className="px-4 h-[26px] text-sm bg-gray-350 text-black hover:bg-gray-300 rounded-none border-1 border-gray-400"
+                        >
+                            {selectedId ? "Salvar Alterações" : "Confirmar"}
+                        </Button>
+                        <Button 
+                            onClick={() => setIsVisible(false)} 
+                            className="px-4 h-[26px] text-sm bg-red-100 text-red-800 hover:bg-red-200 rounded-none border-1 border-red-300"
+                        >
+                            Cancelar
+                        </Button>
                     </div>
                 </div>
             )}
 
+            {/* BOTÕES DE AÇÃO */}
             <div className="flex justify-end mt-2 gap-2">
-                <Button onClick={handleNewClick} className="flex gap-2 px-3 py-1 text-sm bg-gray-350 border border-gray-400 hover:bg-gray-300">
-                    <img src={incluirSvg} className="w-4 h-4" /> Incluir
+                <Button 
+                    onClick={handleNewClick} 
+                    className="flex items-center gap-2 px-4 h-[26px] text-sm bg-gray-350 text-black hover:bg-gray-300 rounded-none border-1 border-gray-400"
+                >
+                    <img src={incluirSvg} className="w-4 h-4" alt="incluir" /> Incluir
                 </Button>
-                <Button onClick={handleEditClick} className={`flex gap-2 px-3 py-1 text-sm border border-gray-400 ${selectedId ? 'bg-blue-100 hover:bg-blue-200' : 'bg-gray-350 opacity-50'}`}>
-                    <img src={editarSvg} className="w-4 h-4" /> Editar
+                
+                <Button 
+                    onClick={handleEditClick} 
+                    className={`flex items-center gap-2 px-4 h-[26px] text-sm rounded-none border-1 border-gray-400 ${selectedId ? 'bg-blue-100 text-blue-800 hover:bg-blue-200' : 'bg-gray-200 text-gray-500 cursor-not-allowed'}`}
+                    disabled={!selectedId}
+                >
+                    <img src={editarSvg} className="w-4 h-4" alt="editar" /> Editar
                 </Button>
-                <Button onClick={handleDeleteClick} className={`flex gap-2 px-3 py-1 text-sm border border-gray-400 ${selectedId ? 'bg-red-100 hover:bg-red-200' : 'bg-gray-350 opacity-50'}`}>
-                    <img src={deletarSvg} className="w-4 h-4" /> Excluir
+                
+                <Button 
+                    onClick={handleDeleteClick} 
+                    className={`flex items-center gap-2 px-4 h-[26px] text-sm rounded-none border-1 border-gray-400 ${selectedId ? 'bg-red-100 text-red-800 hover:bg-red-200 border-red-300' : 'bg-gray-200 text-gray-500 cursor-not-allowed'}`}
+                    disabled={!selectedId}
+                >
+                    <img src={deletarSvg} className="w-4 h-4" alt="excluir" /> Excluir
                 </Button>
             </div>
 
+            {/* TABELA */}
             <table className="bg-white border border-gray-300 w-full text-left mt-2 text-sm">
                 <thead>
-                    <tr className="bg-gray-200">
-                        <th className="px-2 py-1 border border-gray-300">Nome</th>
-                        <th className="px-2 py-1 border border-gray-300">Início</th>
-                        <th className="px-2 py-1 border border-gray-300">Fim</th>
-                        <th className="px-2 py-1 border border-gray-300">Progresso</th>
-                        <th className="px-2 py-1 border border-gray-300 text-center">Ações</th>
+                    <tr className="bg-gray-300">
+                        <th className="px-1 border-1">Nome</th>
+                        <th className="px-1 border-1">Início</th>
+                        <th className="px-1 border-1">Fim</th>
+                        <th className="px-1 border-1">Progresso</th>
+                        <th className="px-1 border-1 text-center">Ações</th>
                     </tr>
                 </thead>
                 <tbody>
-                    {stages.map(item => (
-                        <tr 
-                            key={item.id_stage} 
-                            onClick={() => setSelectedId(selectedId === item.id_stage ? null : item.id_stage)}
-                            className={`cursor-pointer hover:bg-blue-50 ${selectedId === item.id_stage ? 'bg-blue-200' : ''}`}
-                        >
-                            <td className="px-2 py-1 border border-gray-300">{item.name}</td>
-                            <td className="px-2 py-1 border border-gray-300">{new Date(item.expStartDate).toLocaleDateString()}</td>
-                            <td className="px-2 py-1 border border-gray-300">{new Date(item.expEndDate).toLocaleDateString()}</td>
-                            <td className="px-2 py-1 border border-gray-300">{item.progress}%</td>
-                            <td className="px-2 py-1 border border-gray-300 text-center">
-                                <button 
-                                    onClick={(e) => {
-                                        e.stopPropagation(); 
-                                        onSelectStage(item.id_stage, item.name);
-                                    }}
-                                    className="bg-blue-600 text-white px-3 py-0.5 rounded hover:bg-blue-700 text-xs font-bold"
-                                >
-                                    Ver Subetapas &gt;
-                                </button>
-                            </td>
-                        </tr>
-                    ))}
+                    {stages.length === 0 ? (
+                        <tr><td colSpan={5} className="p-2 text-center text-gray-500">Nenhuma etapa cadastrada.</td></tr>
+                    ) : (
+                        stages.map(item => (
+                            <tr 
+                                key={item.id_stage} 
+                                onClick={() => setSelectedId(selectedId === item.id_stage ? null : item.id_stage)}
+                                className={`cursor-pointer hover:bg-gray-50 ${selectedId === item.id_stage ? 'bg-blue-200' : ''}`}
+                            >
+                                <td className="px-2 border-1">{item.name}</td>
+                                <td className="px-2 border-1">{new Date(item.expStartDate).toLocaleDateString()}</td>
+                                <td className="px-2 border-1">{new Date(item.expEndDate).toLocaleDateString()}</td>
+                                <td className="px-2 border-1">{item.progress}%</td>
+                                <td className="px-2 border-1 text-center">
+                                    <button 
+                                        onClick={(e) => {
+                                            e.stopPropagation(); 
+                                            onSelectStage(item.id_stage, item.name);
+                                        }}
+                                        className="bg-green-400 text-white px-3 py-0.5 rounded hover:bg-green-350 text-xs font-bold cursor-pointer"
+                                    >
+                                        Ver Subetapas &gt;
+                                    </button>
+                                </td>
+                            </tr>
+                        ))
+                    )}
                 </tbody>
             </table>
         </div>
