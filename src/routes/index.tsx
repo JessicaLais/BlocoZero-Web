@@ -11,6 +11,7 @@ import { EstoqueObra } from "../pages/Estoque";
 import { CadastroObra } from "../pages/CadastroObra";
 import { Orçamento } from "../pages/Orçamento";
 import { Fin } from "../pages/Financeiro";
+import EstoqueTab from "../pages/EstoqueTabela";
 
 function AppRoutes() {
     const { session } = useAuth();
@@ -25,6 +26,7 @@ function AppRoutes() {
                         <Route path="/" element={<Navigate to="/cadastro-obra" />} />
                         <Route path="/orçamento" element={<Orçamento />} />
                         <Route path="/financeiro" element={<Fin />} />
+                        <Route path="/tabela-estoque" element={<EstoqueTab />} />
                     </>
                 )}
                 {session?.userFunction === "tender" && (

@@ -1,52 +1,51 @@
 import { useEffect, useState } from "react";
 import { z, ZodError } from "zod";
 import { AxiosError } from "axios";
-import { InputForm } from "../InputForm"; // Ajuste o caminho conforme sua estrutura
-import { Button } from "../../../auth/components/Button"; // Ajuste o caminho
-import incluirSvg from "../../../../assets/incluir.svg"; // Ajuste o caminho
-import editarSvg from "../../../../assets/editar.svg"; // Ajuste o caminho
-import deletarSvg from "../../../../assets/deletar.svg"; // Ajuste o caminho
-import { api } from "../../../../services/api"; // Ajuste o caminho
+import { InputForm } from "../InputForm";
+import { Button } from "../../../auth/components/Button";
+import incluirSvg from "../../../../assets/incluir.svg";
+import editarSvg from "../../../../assets/editar.svg";
+import deletarSvg from "../../../../assets/deletar.svg";
+import { api } from "../../../../services/api";
 
-// Interface baseada no retorno do seu Backend (Prisma)
-interface TypeData {
-  id_type: number;
+// Interface baseada no retorno do backend
+interface CategoryData {
+  id: number;
   name: string;
-  work_id: number;
+  id_type: number;
 }
 
 // Schema de validação
-const typeSchema = z.object({
-  name: z.string().min(1, "O nome do tipo é obrigatório"),
-  work_id: z.coerce.number().int().positive("O ID da obra deve ser válido"),
+const categorySchema = z.object({
+  name: z.string().min(1, "O nome da categoria é obrigatório"),
+  id_type: z.coerce.number().int().positive("O ID do tipo deve ser válido"),
 });
 
-export function TiposPanel() {
+export function CategoriasPanel() {
   const [isVisible, setIsVisible] = useState(false);
-  const [types, setTypes] = useState<TypeData[]>([]);
+  const [categories, setCategories] = useState<CategoryData[]>([]);
   const [loading, setLoading] = useState(true);
   const [editingId, setEditingId] = useState<number | null>(null);
 
   const [formData, setFormData] = useState({
     name: "",
-    work_id: "1", // Valor padrão conforme seu exemplo
+    id_type: "1", // valor padrão
   });
 
-  // Função para buscar a lista de Tipos
-  const fetchTypes = async () => {
+  // Buscar categorias
+  const fetchCategories = async () => {
     try {
-      const response = await api.get("/type/list");
-      // Seu backend retorna { types: [...] }
-      setTypes(response.data.types || []);
+      const response = await api.get("/category/list");
+      setCategories(response.data.categories || []);
     } catch (error) {
-      console.error("Erro ao buscar tipos:", error);
+      console.error("Erro ao buscar categorias:", error);
     } finally {
       setLoading(false);
     }
   };
 
   useEffect(() => {
-    fetchTypes();
+    fetchCategories();
   }, []);
 
   function handleInputChange(event: React.ChangeEvent<HTMLInputElement>) {
@@ -54,60 +53,56 @@ export function TiposPanel() {
     setFormData((prev) => ({ ...prev, [name]: value }));
   }
 
-  // Prepara o formulário para edição
-  function handleEdit(type: TypeData) {
+  function handleEdit(category: CategoryData) {
     setFormData({
-      name: type.name,
-      work_id: String(type.work_id),
+      name: category.name,
+      id_type: String(category.id_type),
     });
-    setEditingId(type.id_type);
+    setEditingId(category.id);
     setIsVisible(true);
   }
 
-  // Cancela a edição/criação e limpa o form
   function handleCancel() {
     setIsVisible(false);
     setEditingId(null);
-    setFormData({ name: "", work_id: "1" });
+    setFormData({ name: "", id_type: "1" });
   }
 
-  // Função para Deletar
   async function handleDelete(id: number) {
-    if (!confirm("Tem certeza que deseja excluir este tipo?")) return;
+    if (!confirm("Tem certeza que deseja excluir esta categoria?")) return;
 
     try {
-      await api.delete(`/type/delete/${id}`);
-      alert("Tipo excluído com sucesso!");
-      fetchTypes(); // Recarrega a lista
+      await api.delete(`/category/delete/${id}`);
+      alert("Categoria excluída com sucesso!");
+      fetchCategories();
     } catch (error) {
-      alert("Erro ao excluir o tipo.");
+      alert("Erro ao excluir a categoria.");
       console.error(error);
     }
   }
 
-  // Função de Submit (Serve para Criar e Atualizar)
   async function handleSubmit(event: React.FormEvent) {
     event.preventDefault();
     try {
       setLoading(true);
-      
-      const data = typeSchema.parse({
+
+      const data = categorySchema.parse({
         name: formData.name,
-        work_id: formData.work_id,
+        id_type: formData.id_type,
       });
 
       if (editingId) {
-        // MODO UPDATE
-        await api.put(`/type/update/${editingId}`, data);
-        alert("Tipo atualizado com sucesso!");
+        // Update
+        await api.put(`/category/update/${editingId}`, { name: data.name });
+        alert("Categoria atualizada com sucesso!");
       } else {
-        // MODO CREATE
-        await api.post("/type/register", data);
-        alert("Tipo cadastrado com sucesso!");
+        // Create
+        await api.post("/category/register", data);
+        alert("Categoria cadastrada com sucesso!");
       }
 
-      handleCancel(); // Fecha form e limpa estados
-      fetchTypes();   // Recarrega lista
+      handleCancel();
+      fetchCategories();
     } catch (error) {
       if (error instanceof ZodError) {
         return alert(error.issues[0].message);
@@ -122,17 +117,16 @@ export function TiposPanel() {
   }
 
   return (
-    <div className="overflow-y-scroll h-[300px]"> {/* Aumentei um pouco a altura */}
-      
-      {/* Formulário (Toggle) */}
+    <div className="overflow-y-scroll h-[300px]">
+      {/* Formulário */}
       {isVisible && (
         <div className="w-full space-y-2 py-2 px-4 bg-white rounded-lg shadow-md mb-4 border border-gray-200">
           <h3 className="text-sm font-bold text-gray-700 mb-2">
-            {editingId ? "Editar Tipo" : "Novo Tipo"}
+            {editingId ? "Editar Categoria" : "Nova Categoria"}
           </h3>
           <div className="flex flex-row items-center gap-6">
             <InputForm
-              legend="Nome do Tipo:"
+              legend="Nome da Categoria:"
               value={formData.name}
               onChange={handleInputChange}
               name="name"
@@ -140,15 +134,15 @@ export function TiposPanel() {
               containerClassName="w-2/3"
             />
             <InputForm
-              legend="ID Obra:"
-              value={formData.work_id}
+              legend="ID Tipo:"
+              value={formData.id_type}
               onChange={handleInputChange}
-              name="work_id"
+              name="id_type"
               type="number"
               containerClassName="w-1/3"
             />
           </div>
-          
+
           <div className="flex gap-2 mt-2">
             <Button
               className="px-4 h-[26px] text-sm bg-gray-350 text-black hover:bg-gray-300 border border-gray-400"
@@ -168,7 +162,7 @@ export function TiposPanel() {
         </div>
       )}
 
-      {/* Botão Incluir (Global) */}
+      {/* Botão Incluir */}
       {!isVisible && (
         <div className="flex justify-end mb-4">
           <Button
@@ -176,7 +170,7 @@ export function TiposPanel() {
             onClick={() => setIsVisible(true)}
           >
             <img src={incluirSvg} alt="Incluir" className="w-4 h-4" />
-            Incluir Tipo
+            Incluir Categoria
           </Button>
         </div>
       )}
@@ -188,36 +182,39 @@ export function TiposPanel() {
         <table className="bg-white border-1 border-gray-500 w-full text-left">
           <thead>
             <tr className="bg-gray-300">
-              <th className="px-2 py-1 border-1 border-gray-400 w-20">ID</th>
-              <th className="px-2 py-1 border-1 border-gray-400">Nome do Tipo</th>
-              <th className="px-2 py-1 border-1 border-gray-400 w-24">ID Obra</th>
-              <th className="px-2 py-1 border-1 border-gray-400 w-32 text-center">Ações</th>
+              <th className="px-2 border-1">ID</th>
+              <th className="px-2 border-1">Nome</th>
+              <th className="px-2 border-1">ID Tipo</th>
+              <th className="px-2 border-1 text-center">Ações</th>
             </tr>
           </thead>
           <tbody>
-            {types.length === 0 ? (
+            {categories.length === 0 ? (
               <tr>
                 <td colSpan={4} className="p-2 text-center text-gray-500">
-                  Nenhum tipo cadastrado.
+                  Nenhuma categoria cadastrada.
                 </td>
               </tr>
             ) : (
-              types.map((type) => (
-                <tr key={type.id_type} className="text-sm border-b border-gray-300 hover:bg-gray-50">
-                  <td className="px-2 py-1 border-1 border-gray-300">{type.id_type}</td>
-                  <td className="px-2 py-1 border-1 border-gray-300 font-medium">{type.name}</td>
-                  <td className="px-2 py-1 border-1 border-gray-300">{type.work_id}</td>
-                  <td className="px-2 py-1 border-1 border-gray-300 text-center">
+              categories.map((category) => (
+                <tr
+                  key={category.id}
+                  className="text-sm border-b-1 border-gray-500 hover:bg-gray-50"
+                >
+                  <td className="px-2 border-1">{category.id}</td>
+                  <td className="px-2 border-1 font-medium">{category.name}</td>
+                  <td className="px-2 border-1">{category.id_type}</td>
+                  <td className="px-2 border-1 text-center">
                     <div className="flex items-center justify-center gap-2">
-                      <button 
-                        onClick={() => handleEdit(type)}
+                      <button
+                        onClick={() => handleEdit(category)}
                         title="Editar"
                         className="p-1 hover:bg-gray-200 rounded"
                       >
                         <img src={editarSvg} alt="Editar" className="w-4 h-4" />
                       </button>
-                      <button 
-                        onClick={() => handleDelete(type.id_type)}
+                      <button
+                        onClick={() => handleDelete(category.id)}
                         title="Excluir"
                         className="p-1 hover:bg-red-100 rounded"
                       >
