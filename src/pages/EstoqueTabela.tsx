@@ -1,26 +1,42 @@
+// components/EstoqueTab.tsx
+
 import ResumoMovimentacao from "../features/gestor/componentes/estoque-tabela/MovimentacaoEstoque";
 import TabelaMateriais from "../features/gestor/componentes/estoque-tabela/TabelaMateriais";
 import { useEffect, useState } from "react";
+import { FiLoader } from "react-icons/fi"; 
 
 export default function EstoqueTab() {
-  const [materiais, setMateriais] = useState([]);
-
-  // Endpoint 
+  const [materiais, setMateriais] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true); 
+  
   const endpoint = "http://localhost:8080/stock/stockGetAvailable";
 
   useEffect(() => {
     async function carregarDados() {
       try {
         const resposta = await fetch(endpoint);
+        if (!resposta.ok) {
+            throw new Error(`Erro HTTP: ${resposta.status}`);
+        }
         const dados = await resposta.json();
-        console.log(dados);
         setMateriais(dados);
       } catch (erro) {
         console.error("Erro ao carregar materiais:", erro);
+      } finally {
+        setLoading(false); 
       }
     }
     carregarDados();
-  }, []);
+  }, [endpoint]);
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center h-screen text-gray-500">
+        <FiLoader className="animate-spin mr-2" size={24} />
+        Carregando dados do estoque...
+      </div>
+    );
+  }
 
   return (
     <div className="p-6 bg-gray-50 min-h-screen">
@@ -29,11 +45,10 @@ export default function EstoqueTab() {
         Controle de Estoque da Obra
       </h1>
 
-      {/* Cards de movimentação */}
       <ResumoMovimentacao materiais={materiais} />
 
-      {/* Tabela de materiais */}
-      <TabelaMateriais endpoint={endpoint} />
+      {/* 💡 PASSAR OS DADOS E O ENDPOINT PARA AÇÕES CRUD */}
+      <TabelaMateriais dadosIniciais={materiais} endpoint={endpoint} /> 
     </div>
   );
 }

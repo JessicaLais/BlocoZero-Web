@@ -2,8 +2,11 @@ import { useState } from "react";
 import { Tabs, TabList, Tab, TabPanels, TabPanel } from "./Tabs";
 import { MateriaisPanel } from "./AbaMateriais";
 import { FuncionariosPanel } from "./AbaFuncionarios";
-import { CronogramaPanel } from "./AbaEtapa"; 
-import { SubetapasPanel } from "./AbaSubetapas";   
+import { CronogramaPanel } from "./AbaEtapa"; // Mantive seu nome de arquivo original
+import { SubetapasPanel } from "./AbaSubetapas";
+// --- Novos imports vindos do Git Pull ---
+import { TiposPanel } from "./AbaTipo"; 
+import { CategoriasPanel } from "./AbaCategoria";
 
 export function AbasCadastroObra() {
     // Controla qual aba está ativa visualmente
@@ -29,7 +32,11 @@ export function AbasCadastroObra() {
                             <Tab label="funcionarios">Funcionários</Tab>
                             <Tab label="cronograma">Etapas</Tab>
                             
-                            {/* A aba Subetapas fica desabilitada se não tiver etapa selecionada */}
+                            {/* --- Abas novas do Git Pull --- */}
+                            <Tab label="tipos">Tipos</Tab>
+                            <Tab label="categorias">Categorias</Tab>
+                            
+                            {/* Aba Subetapas (Sua implementação) */}
                             <Tab label="subetapas" disabled={!selectedStage}>
                                 {selectedStage ? `Subetapas de: ${selectedStage.name}` : "Subetapas"}
                             </Tab>
@@ -49,6 +56,15 @@ export function AbasCadastroObra() {
                     <TabPanel whenActive="cronograma">
                         {/* Passamos a função de seleção para dentro do painel */}
                         <CronogramaPanel onSelectStage={handleSelectStage} />
+                    </TabPanel>
+
+                    {/* --- Painéis novos do Git Pull --- */}
+                    <TabPanel whenActive="tipos">
+                        <TiposPanel />
+                    </TabPanel>
+
+                    <TabPanel whenActive="categorias">
+                        <CategoriasPanel />
                     </TabPanel>
 
                     <TabPanel whenActive="subetapas">
