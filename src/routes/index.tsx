@@ -12,6 +12,7 @@ import { CadastroObra } from "../pages/CadastroObra";
 import { Orçamento } from "../pages/Orçamento";
 import { Fin } from "../pages/Financeiro";
 import EstoqueTab from "../pages/EstoqueTabela";
+import { CronogramaPage } from "../pages/CronogramaFisico";
 
 function AppRoutes() {
     const { session } = useAuth();
@@ -27,6 +28,7 @@ function AppRoutes() {
                         <Route path="/orçamento" element={<Orçamento />} />
                         <Route path="/financeiro" element={<Fin />} />
                         <Route path="/tabela-estoque" element={<EstoqueTab />} />
+                        <Route path="/cronograma-fisico" element={<CronogramaPage />} />
                     </>
                 )}
                 {session?.userFunction === "tender" && (
