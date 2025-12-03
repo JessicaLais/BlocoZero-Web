@@ -71,7 +71,7 @@ export function DiagramaGantt({ id_work, onChangeStats }: DiagramaGanttProps) {
     gantt.config.autoscroll = true;
     gantt.config.show_errors = true;
 
-    gantt.config.xml_date = "%Y-%m-%d";
+    //gantt.config.xml_date = "%Y-%m-%d";
 
     // config das colunas da tabela
     gantt.config.columns = [
@@ -118,6 +118,8 @@ export function DiagramaGantt({ id_work, onChangeStats }: DiagramaGanttProps) {
         // comnverte a resposta JSON para o formato StageAPI[]
         const payload: StageAPI[] = await resp.json();
 
+        console.log("DADOS: ", payload)
+
         const tasks: any[] = []; // array para armazenar tarefas do Gantt 
         const links: any[] = []; 
 
@@ -157,8 +159,8 @@ export function DiagramaGantt({ id_work, onChangeStats }: DiagramaGanttProps) {
           tasks.push({
             id: stageId,
             text: stage.stageName,
-            start_date: formatIso(sStart), // formata para string YYYY-MM-DD
-            end_date: formatIso(sEnd),     // formata para string YYYY-MM-DD
+            start_date: sStart || undefined, 
+            end_date: sEnd || undefined,    // formata para string YYYY-MM-DD
             type: "project", 
             open: true,
           });
@@ -182,11 +184,13 @@ export function DiagramaGantt({ id_work, onChangeStats }: DiagramaGanttProps) {
             tasks.push({
               id: `ss-${stage.stageId}-${i}`,
               text: sub.substageName,
-              start_date: formatIso(st), 
-              end_date: formatIso(en),   
+              start_date: st || undefined, 
+              end_date: en || undefined,
               duration,                   
               parent: stageId, // vincula a etapa pai 
-              progress: sub.progress ?? 0,
+              progress: sub.progress ?? 0, 
+              //verifica pra ver se n esta passando mais de 100% tp recebe 25 de progresso e o gannt passa como 2500% na tabela
+              //progress: (sub.progress && sub.progress > 1) ? sub.progress / 100 : (sub.progress ?? 0),
               type: "task", 
             });
           }
