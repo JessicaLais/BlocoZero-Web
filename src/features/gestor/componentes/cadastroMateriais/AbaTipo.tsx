@@ -33,7 +33,7 @@ export function TiposPanel() {
   // funcao para buscar a lista de Tipos
   const fetchTypes = async () => {
     try {
-      const response = await api.get("/type/list");
+      const response = await api.get(`/type/list/${formData.work_id}`);
       setTypes(response.data.types || []);
     } catch (error) {
       console.error("Erro ao buscar tipos:", error);

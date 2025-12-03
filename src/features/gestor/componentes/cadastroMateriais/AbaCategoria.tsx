@@ -8,14 +8,12 @@ import editarSvg from "../../../../assets/editar.svg";
 import deletarSvg from "../../../../assets/deletar.svg";
 import { api } from "../../../../services/api";
 
-// Interface baseada no retorno do backend
 interface CategoryData {
   id: number;
   name: string;
   id_type: number;
 }
 
-// Schema de validação
 const categorySchema = z.object({
   name: z.string().min(1, "O nome da categoria é obrigatório"),
   id_type: z.coerce.number().int().positive("O ID do tipo deve ser válido"),
@@ -29,13 +27,12 @@ export function CategoriasPanel() {
 
   const [formData, setFormData] = useState({
     name: "",
-    id_type: "1", // valor padrão
+    id_type: "1", 
   });
 
-  // Buscar categorias
   const fetchCategories = async () => {
     try {
-      const response = await api.get("/category/list");
+      const response = await api.get(`/category/list/${formData.id_type}`);
       setCategories(response.data.categories || []);
     } catch (error) {
       console.error("Erro ao buscar categorias:", error);
@@ -92,11 +89,9 @@ export function CategoriasPanel() {
       });
 
       if (editingId) {
-        // Update
         await api.put(`/category/update/${editingId}`, { name: data.name });
         alert("Categoria atualizada com sucesso!");
       } else {
-        // Create
         await api.post("/category/register", data);
         alert("Categoria cadastrada com sucesso!");
       }
