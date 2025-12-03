@@ -98,7 +98,7 @@ export function FuncionariosPanel() {
                 name: funcToEdit.name,
                 userFunction: funcToEdit.userFunction,
                 email: funcToEdit.email,
-                password: "",
+                password: "123456",
                 phone: funcToEdit.phone || "",
                 works: funcToEdit.works || "",
                 hourlyRate: String(funcToEdit.hourlyRate),
