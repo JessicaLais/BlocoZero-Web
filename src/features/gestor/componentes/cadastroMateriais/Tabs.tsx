@@ -1,7 +1,6 @@
-// components/Tabs.tsx
-import  { useState, createContext, useContext } from 'react';
+import { useState, createContext, useContext } from 'react';
 import type { ReactNode } from 'react';
-import { classMerge } from "../../../../utils/classMerge";
+import { classMerge } from "../../../../utils/classMerge"; 
 
 interface TabsContextType {
     activeTab: string;
@@ -12,15 +11,35 @@ const TabsContext = createContext<TabsContextType | undefined>(undefined);
 interface TabsProps {
     children: ReactNode;
     defaultTab: string;
+    activeTab?: string;
+    onChange?: (tab: string) => void;
 }
-export function Tabs({ children, defaultTab }: TabsProps) {
-    const [activeTab, setActiveTab] = useState(defaultTab);
+
+export function Tabs({ children, defaultTab, activeTab, onChange }: TabsProps) {
+    const [internalActiveTab, setInternalActiveTab] = useState(defaultTab);
+
+    const currentTab = activeTab !== undefined ? activeTab : internalActiveTab;
+
+    const handleTabChange = (label: string) => {
+        if (onChange) {
+            onChange(label);
+        }
+        
+
+        if (activeTab === undefined) {
+            setInternalActiveTab(label);
+        }
+    };
+
     return (
-        <TabsContext.Provider value={{ activeTab, setActiveTab }}>
-            <div>{children}</div>
+        <TabsContext.Provider value={{ activeTab: currentTab, setActiveTab: handleTabChange }}>
+            <div className="flex flex-col w-full">
+                {children}
+            </div>
         </TabsContext.Provider>
     );
 }
+
 
 interface TabListProps {
     children: ReactNode;
@@ -33,11 +52,15 @@ export function TabList({ children }: TabListProps) {
     );
 }
 
+
 interface TabProps {
     label: string;
     children: ReactNode;
+    
+    disabled?: boolean;
 }
-export function Tab({ label, children }: TabProps) {
+
+export function Tab({ label, children, disabled }: TabProps) {
     const context = useContext(TabsContext);
     if (!context) {
         throw new Error("Tab deve ser usado dentro de um componente Tabs");
@@ -47,19 +70,28 @@ export function Tab({ label, children }: TabProps) {
 
     return (
         <button
-            type="button" 
-            onClick={() => setActiveTab(label)}
+            type="button"
+            disabled={disabled} 
+            onClick={() => !disabled && setActiveTab(label)}
             className={classMerge([
-                "px-6 py-2 border text-sm font-semibold focus:outline-none",
+                "px-6 py-2 border text-sm font-semibold focus:outline-none transition-colors",
+               
                 isActive
                     ? "border-gray-400 border-b-white bg-gray-350 rounded-t-md text-gray-800 z-10" 
-                    : "border-gray-400 text-gray-800 bg-white rounded-t-md hover:bg-gray-300" 
+                    : "border-gray-400 text-gray-800 bg-white rounded-t-md",
+                
+                
+                !isActive && !disabled ? "hover:bg-gray-300" : "",
+
+                
+                disabled ? "opacity-50 cursor-not-allowed bg-gray-100 text-gray-400 hover:bg-gray-100" : ""
             ])}
         >
             {children}
         </button>
     );
 }
+
 
 interface TabPanelsProps {
     children: ReactNode;
@@ -72,6 +104,7 @@ export function TabPanels({ children }: TabPanelsProps) {
     );
 }
 
+
 interface TabPanelProps {
     whenActive: string;
     children: ReactNode;
@@ -83,5 +116,6 @@ export function TabPanel({ whenActive, children }: TabPanelProps) {
     }
     const { activeTab } = context;
 
+   
     return activeTab === whenActive ? <div>{children}</div> : null;
 }
