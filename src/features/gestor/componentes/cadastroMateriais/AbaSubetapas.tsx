@@ -395,12 +395,12 @@ export function SubetapasPanel({ selectedStage }: SubetapasPanelProps) {
 
             <table className="bg-white border border-gray-300 w-full text-left mt-2 text-sm">
                 <thead>
-                    <tr className="bg-gray-200">
-                        <th className="px-2 py-1 border border-gray-300 w-1/4">Subetapa</th>
-                        <th className="px-2 py-1 border border-gray-300 w-1/4">Equipe</th>
-                        <th className="px-2 py-1 border border-gray-300 w-1/4">Materiais</th>
-                        <th className="px-2 py-1 border border-gray-300 w-1/6">Fim Previsto</th>
-                        <th className="px-2 py-1 border border-gray-300 w-12">Prog.</th>
+                    <tr className="bg-gray-300">
+                        <th className="px-1 border-1">Subetapa</th>
+                        <th className="px-1 border-1">Equipe</th>
+                        <th className="px-1 border-1">Materiais</th>
+                        <th className="px-1 border-1">Fim Previsto</th>
+                        <th className="px-1 border-1">Prog.</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -411,12 +411,12 @@ export function SubetapasPanel({ selectedStage }: SubetapasPanelProps) {
                         const dataFim = rawDate ? new Date(rawDate).toLocaleDateString() : "-";
 
                         return (
-                            <tr key={uniqueKey} onClick={() => setSelectedId(selectedId === item.id_substage ? null : item.id_substage)} className={`cursor-pointer hover:bg-blue-50 ${selectedId === item.id_substage ? 'bg-blue-200' : ''}`}>
-                                <td className="px-2 py-1 border border-gray-300">{item.name || "Sem nome"}</td>
+                            <tr key={uniqueKey} onClick={() => setSelectedId(selectedId === item.id_substage ? null : item.id_substage)} className={`cursor-pointer hover:bg-gray-50 ${selectedId === item.id_substage ? 'bg-blue-200' : ''}`}>
+                                <td className="px-1 border-1 align-bottom">{item.name || "Sem nome"}</td>
                                 
-                                <td className="px-2 py-1 border border-gray-300 text-xs align-top">
+                                <td className="px-1 border-1 text-xs align-middle">
                                     {item.substageEmployes && item.substageEmployes.length > 0 ? (
-                                        <div className="flex flex-col gap-1 mt-1">
+                                        <div className="flex flex-col gap-1 m-1">
                                             {item.substageEmployes.map((emp, idx) => (
                                                 <span key={idx} className="bg-white border border-gray-300 px-1 rounded shadow-sm block">
                                                     <strong>{getEmployeeName(emp)}</strong> ({emp.hours}h)
@@ -426,9 +426,9 @@ export function SubetapasPanel({ selectedStage }: SubetapasPanelProps) {
                                     ) : "-"}
                                 </td>
 
-                                <td className="px-2 py-1 border border-gray-300 text-xs align-top">
+                                <td className="px-1 border-1 text-xs align-middle">
                                     {item.substageStocks && item.substageStocks.length > 0 ? (
-                                        <div className="flex flex-col gap-1 mt-1">
+                                        <div className="flex flex-col gap-1 m-1">
                                             {item.substageStocks.map((stock, idx) => (
                                                 <span key={idx} className="bg-white border border-gray-300 px-1 rounded shadow-sm block">
                                                     {getMaterialName(stock)}: {stock.quantityUsed}
@@ -438,8 +438,8 @@ export function SubetapasPanel({ selectedStage }: SubetapasPanelProps) {
                                     ) : "-"}
                                 </td>
 
-                                <td className="px-2 py-1 border border-gray-300">{dataFim}</td>
-                                <td className="px-2 py-1 border border-gray-300">{item.progress || 0}%</td>
+                                <td className="px-1 border-1 align-bottom">{dataFim}</td>
+                                <td className="px-1 border-1 align-bottom">{item.progress || 0}%</td>
                             </tr>
                         );
                     })}

@@ -22,12 +22,9 @@ interface StockData {
     weightLength: number;
     minQuantity: number;
     costUnit: number;
-    // O backend atual não está mandando o include da categoria, 
-    // então o campo category? pode vir undefined.
     category?: { name: string };
 }
 
-// Schema de validação
 const stockSchema = z.object({
     id_work: z.coerce.number().min(1, "ID da obra inválido"),
     id_type: z.coerce.number(),
@@ -62,21 +59,13 @@ export function MateriaisPanel() {
         costUnit: "0.00",
     });
 
-    // --- 1. BUSCAR (GET) ---
     const fetchStocks = async () => {
         try {
-            // CORREÇÃO: Nova rota de listagem conforme seu Router
             const response = await api.get(`/stock/list/${CURRENT_WORK_ID}`);
             const data = response.data;
-
-            // O controller retorna { stock: [...] }
-            if (data && data.stock) {
-                setStocks(data.stock);
-            } else if (Array.isArray(data)) {
-                setStocks(data);
-            } else {
-                setStocks([]);
-            }
+            if (data && data.stock) setStocks(data.stock);
+            else if (Array.isArray(data)) setStocks(data);
+            else setStocks([]);
         } catch (error) {
             console.error("Erro ao buscar estoque:", error);
             setStocks([]);
@@ -118,7 +107,6 @@ export function MateriaisPanel() {
     const handleEditClick = () => {
         if (!selectedId) return alert("Selecione um item para editar.");
         const item = stocks.find((s) => s.id_stock === selectedId);
-        
         if (item) {
             setFormData({
                 id_work: String(item.id_work),
@@ -139,7 +127,6 @@ export function MateriaisPanel() {
     const handleDeleteClick = async () => {
         if (!selectedId) return alert("Selecione um item para excluir.");
         if (!window.confirm("Deseja remover este item do estoque?")) return;
-
         try {
             setLoading(true);
             await api.delete(`/stock/delete/${selectedId}`); 
@@ -160,17 +147,8 @@ export function MateriaisPanel() {
         e.preventDefault();
         try {
             setLoading(true);
-            
             const data = stockSchema.parse(formData);
-
-            // Payload ajustado para o seu service (que espera 'category' e 'id_category')
-            const payload = {
-                ...data,
-                // O service.js na linha 19 busca 'data.category' no getCategoryById
-                // Mas na linha 82 (create) usa 'id_category'. Enviamos os dois por segurança.
-                category: data.id_category, 
-                id_category: data.id_category
-            };
+            const payload = { ...data, category: data.id_category, id_category: data.id_category };
 
             if (selectedId) {
                 await api.put(`/stock/update/${selectedId}`, payload);
@@ -179,12 +157,10 @@ export function MateriaisPanel() {
                 await api.post("/stock/create", payload);
                 alert("Item criado com sucesso!");
             }
-
             setIsVisible(false);
             resetForm();
             setSelectedId(null);
             fetchStocks();
-
         } catch (error) {
             console.log("Erro detalhado:", error);
             if (error instanceof ZodError) return alert(error.issues[0].message);
@@ -201,41 +177,28 @@ export function MateriaisPanel() {
                 <div className="w-full space-y-2 py-2 px-4 bg-white rounded-lg shadow-md mb-4 border border-gray-200">
                     <div className="flex flex-row items-center gap-6">
                         <InputForm 
-                            legend="Código:" 
-                            name="code"
-                            value={formData.code}
-                            onChange={handleInputChange}
-                            containerClassName="flex-1"
+                            legend="Código:" name="code" value={formData.code} 
+                            onChange={handleInputChange} containerClassName="flex-1"
                         />
-
                         <SelectForm 
-                            legend="Categoria:" 
-                            name="id_category"
-                            value={formData.id_category}
-                            onChange={handleInputChange}
-                            containerClassName="flex-1"
+                            legend="Categoria:" name="id_category" value={formData.id_category} 
+                            onChange={handleInputChange} containerClassName="flex-1"
                         >
                             <option value="">Selecione...</option>
-                            {/* IDs fixos para teste - idealmente viriam de um fetchCategorias */}
                             <option value="1">Estrutura (ID 1)</option>
                             <option value="2">Acabamento (ID 2)</option>
                         </SelectForm>
                     </div>
 
-                    <div className="flex flex-row items-center gap-6">
+                    <div className="flex flex-row items-center gap-4">
+                        {/* 2. Campo Nome reduzido (w-1/3 em vez de flex-1) */}
                         <InputForm 
-                            legend="Nome do material:" 
-                            name="name"
-                            value={formData.name}
-                            onChange={handleInputChange}
-                            containerClassName="flex-1" 
+                            legend="Nome do material:" name="name" value={formData.name} 
+                            onChange={handleInputChange} containerClassName="w-1/3" 
                         />
                         <SelectForm 
-                            legend="Unidade:" 
-                            name="unitMeasure"
-                            value={formData.unitMeasure}
-                            onChange={handleInputChange}
-                            containerClassName="w-24"
+                            legend="Unidade:" name="unitMeasure" value={formData.unitMeasure} 
+                            onChange={handleInputChange} containerClassName="w-1/6"
                         >
                             <option value="">...</option>
                             <option value="M³">M³</option>
@@ -244,49 +207,35 @@ export function MateriaisPanel() {
                             <option value="m">m</option>
                             <option value="un">un</option>
                         </SelectForm>
+                        
+                        {/* 3. Campos Peso e Custo separados */}
                         <InputForm 
-                            legend="Peso/Comp:" 
-                            name="weightLength"
-                            value={formData.weightLength}
-                            onChange={handleInputChange}
-                            type="number"
-                            containerClassName="w-24" 
+                            legend="Peso/Comp:" name="weightLength" value={formData.weightLength} 
+                            onChange={handleInputChange} type="number" containerClassName="flex-1" 
                         />
                          <InputForm 
-                            legend="Custo Unit (R$):" 
-                            name="costUnit"
-                            value={formData.costUnit}
-                            onChange={handleInputChange}
-                            type="number"
-                            step="0.01"
-                            containerClassName="w-32" 
+                            legend="Custo Unit (R$):" name="costUnit" value={formData.costUnit} 
+                            onChange={handleInputChange} type="number" step="0.01" containerClassName="flex-1" 
                         />
                     </div>
 
                     <div className="flex flex-row items-center gap-10">
                         <InputForm 
-                            legend="Qtd Inicial:" 
-                            name="stockQuantity"
-                            value={formData.stockQuantity}
-                            onChange={handleInputChange}
-                            type="number"
-                            containerClassName="w-1/3"
+                            legend="Qtd Inicial:" name="stockQuantity" value={formData.stockQuantity} 
+                            onChange={handleInputChange} type="number" containerClassName="w-1/3"
                         />
                         <InputForm 
-                            legend="Estoque Mínimo:" 
-                            name="minQuantity"
-                            value={formData.minQuantity}
-                            onChange={handleInputChange}
-                            type="number"
-                            containerClassName="w-1/3"
+                            legend="Estoque Mínimo:" name="minQuantity" value={formData.minQuantity} 
+                            onChange={handleInputChange} type="number" containerClassName="w-1/3"
                         />
                     </div>
 
                     <div className="flex gap-2 mt-2 justify-end">
-                        <Button onClick={handleSubmit} className="px-4 py-1 text-sm bg-blue-600 text-white hover:bg-blue-700 rounded border border-blue-800">
-                            {selectedId ? "Salvar Alterações" : "Confirmar Inclusão"}
+                        {/* 1. Botão Confirmar agora CINZA (padrão do projeto) */}
+                        <Button onClick={handleSubmit} className="px-4 py-1 text-sm bg-gray-350 hover:bg-gray-300  border border-gray-400 text-black">
+                            {selectedId ? "Salvar Alterações" : "Confirmar"}
                         </Button>
-                        <Button onClick={() => setIsVisible(false)} className="px-4 py-1 text-sm bg-red-200 text-red-800 hover:bg-red-300 rounded border border-gray-400">
+                        <Button onClick={() => setIsVisible(false)} className="px-4 py-1 text-sm bg-red-200 text-red-800 hover:bg-red-300  border border-gray-400">
                             Cancelar
                         </Button>
                     </div>
@@ -297,30 +246,24 @@ export function MateriaisPanel() {
                 <Button onClick={handleNewClick} className="flex items-center gap-2 px-3 py-1 text-sm bg-gray-350 border border-gray-400 hover:bg-gray-300">
                     <img src={incluirSvg} alt="incluir" className="w-4 h-4"/> Incluir
                 </Button>
-                <Button 
-                    onClick={handleEditClick} 
-                    className={`flex items-center gap-2 px-3 py-1 text-sm border border-gray-400 ${selectedId ? 'bg-blue-100 hover:bg-blue-200' : 'bg-gray-350 opacity-50'}`}
-                >
+                <Button onClick={handleEditClick} className={`flex items-center gap-2 px-3 py-1 text-sm border border-gray-400 ${selectedId ? 'bg-blue-100 hover:bg-blue-200' : 'bg-gray-350 opacity-50'}`}>
                     <img src={editarSvg} alt="editar" className="w-4 h-4"/> Editar
                 </Button>
-                <Button 
-                    onClick={handleDeleteClick} 
-                    className={`flex items-center gap-2 px-3 py-1 text-sm border border-gray-400 ${selectedId ? 'bg-red-100 hover:bg-red-200' : 'bg-gray-350 opacity-50'}`}
-                >
+                <Button onClick={handleDeleteClick} className={`flex items-center gap-2 px-3 py-1 text-sm border border-gray-400 ${selectedId ? 'bg-red-100 hover:bg-red-200' : 'bg-gray-350 opacity-50'}`}>
                     <img src={deletarSvg} alt="deletar" className="w-4 h-4"/> Excluir
                 </Button>
             </div>
 
-            <table className="bg-white border border-gray-300 w-full text-left mt-2 text-sm">
+            <table className="bg-white border-1 border-gray-500 w-full text-left mt-2 text-sm">
                 <thead> 
-                    <tr className="bg-gray-200">
-                        <th className="px-2 py-1 border border-gray-300">Código</th>
-                        <th className="px-2 py-1 border border-gray-300">Nome</th>
-                        <th className="px-2 py-1 border border-gray-300">Categoria</th>
-                        <th className="px-2 py-1 border border-gray-300">Unidade</th>
-                        <th className="px-2 py-1 border border-gray-300">Qtd Atual</th>
-                        <th className="px-2 py-1 border border-gray-300">Minimo</th>
-                        <th className="px-2 py-1 border border-gray-300">Custo Un.</th>
+                    <tr className="bg-gray-300">
+                        <th className="px-1 border-1">Código</th>
+                        <th className="px-1 border-1">Nome</th>
+                        <th className="px-1 border-1">Categoria</th>
+                        <th className="px-1 border-1">Unidade</th>
+                        <th className="px-1 border-1">Qtd Atual</th>
+                        <th className="px-1 border-1">Minimo</th>
+                        <th className="px-1 border-1">Custo Un.</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -331,18 +274,15 @@ export function MateriaisPanel() {
                         <tr 
                             key={item.id_stock}
                             onClick={() => setSelectedId(selectedId === item.id_stock ? null : item.id_stock)}
-                            className={`cursor-pointer hover:bg-blue-50 ${selectedId === item.id_stock ? 'bg-blue-200' : ''}`}
+                            className={`cursor-pointer hover:bg-gray-50 ${selectedId === item.id_stock ? 'bg-blue-200' : ''}`}
                         > 
-                            <td className="px-2 py-1 border border-gray-300">{item.code}</td>
-                            <td className="px-2 py-1 border border-gray-300">{item.name}</td>
-                            <td className="px-2 py-1 border border-gray-300">
-                                {/* Fallback para ID caso o nome não venha do backend */}
-                                {item.category?.name || `ID ${item.id_category}`}
-                            </td>
-                            <td className="px-2 py-1 border border-gray-300">{item.unitMeasure}</td>
-                            <td className="px-2 py-1 border border-gray-300">{item.stockQuantity}</td>
-                            <td className="px-2 py-1 border border-gray-300">{item.minQuantity}</td>
-                            <td className="px-2 py-1 border border-gray-300">
+                            <td className="px-2 border-1">{item.code}</td>
+                            <td className="px-2 border-1">{item.name}</td>
+                            <td className="px-2 border-1">{item.category?.name || `ID ${item.id_category}`}</td>
+                            <td className="px-2 border-1">{item.unitMeasure}</td>
+                            <td className="px-2 border-1">{item.stockQuantity}</td>
+                            <td className="px-2 border-1">{item.minQuantity}</td>
+                            <td className="px-2 border-1">
                                 {item.costUnit ? `R$ ${Number(item.costUnit).toFixed(2)}` : '-'}
                             </td>
                         </tr> 
