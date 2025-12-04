@@ -13,7 +13,7 @@ interface SubetapasPanelProps {
     selectedStage: { id: number, name: string } | null;
 }
 
-
+// --- INTERFACES ---
 interface SubstageData {
     id_substage: number;
     stage_id: number;
@@ -22,7 +22,7 @@ interface SubstageData {
     exp_duration?: string;
     progress: number;
     
-   
+    // Lista de Funcionários
     substageEmployes?: {
         userId: number;
         hours: number;
@@ -30,11 +30,11 @@ interface SubstageData {
         user?: { name: string }; 
     }[];
 
-    
+    // Lista de Materiais
     substageStocks?: {
         materialStockId: number;
         quantityUsed: number;
-        materialStock?: { name: string; unitMeasure: string }; 
+        materialStock?: { name: string; unitMeasure: string };
     }[];
 }
 
@@ -73,6 +73,7 @@ export function SubetapasPanel({ selectedStage }: SubetapasPanelProps) {
 
     const CURRENT_WORK_ID = 1;
 
+    // Estados
     const [isVisible, setIsVisible] = useState(false);
     const [substages, setSubstages] = useState<SubstageData[]>([]);
     const [selectedId, setSelectedId] = useState<number | null>(null);
@@ -88,10 +89,9 @@ export function SubetapasPanel({ selectedStage }: SubetapasPanelProps) {
     const [addEmp, setAddEmp] = useState({ user_id: "", hours: "", func: "" });
     const [addMat, setAddMat] = useState({ item_id: "", qtd: "" });
 
-
+    // --- Buscas ---
     const fetchResources = async () => {
         try {
-      
             const resEmp = await api.get(`/user/list/${CURRENT_WORK_ID}`);
             const rawEmp = resEmp.data;
             let empList: EmployeeOption[] = [];
@@ -99,7 +99,6 @@ export function SubetapasPanel({ selectedStage }: SubetapasPanelProps) {
             else if (rawEmp.users && Array.isArray(rawEmp.users)) empList = rawEmp.users;
             setAvailableEmployees(empList);
 
-    
             const resStock = await api.get(`/stock/${CURRENT_WORK_ID}`);
             const rawStock = resStock.data;
             let stockList: StockOption[] = [];
@@ -113,19 +112,43 @@ export function SubetapasPanel({ selectedStage }: SubetapasPanelProps) {
         }
     };
 
+    // --- AQUI ESTÁ A CORREÇÃO PRINCIPAL ---
     const fetchSubstages = async () => {
         try {
-            const response = await api.get(`/substage/list/${selectedStage.id}`);
+            // O Backend mudou: Agora ele espera o ID da OBRA, não da Etapa.
+            // E ele retorna um array de arrays (todas as subetapas de todas as etapas).
+            const response = await api.get(`/substage/list/${CURRENT_WORK_ID}`);
             const data = response.data;
-            let lista: SubstageData[] = [];
-            if (data && data.subStages) lista = data.subStages;
-            else if (Array.isArray(data)) lista = data;
             
+            let allSubstages: any[] = [];
 
-            const listaLimpa = lista.map((item: any) => item.substage ? item.substage : item);
+            // Achatar o array (flat) para ter uma lista única
+            if (data && data.subStages) {
+                allSubstages = data.subStages.flat();
+            } else if (Array.isArray(data)) {
+                allSubstages = data.flat();
+            }
+
+            // FILTRAR: Mostra apenas as subetapas que pertencem à Etapa Selecionada
+            const filteredList = allSubstages.filter((item: any) => {
+                // O dado pode vir aninhado em 'substage' ou direto
+                // Precisamos verificar o stageId (que fica na tabela de relação ou no objeto substage se tiver include)
+                
+                // Opção 1: Item é a relação StageSubstage (tem stageId na raiz)
+                if (item.stageId && Number(item.stageId) === Number(selectedStage.id)) return true;
+                
+                // Opção 2: Item tem o objeto substage dentro
+                if (item.substage && item.stageId && Number(item.stageId) === Number(selectedStage.id)) return true;
+
+                return false;
+            });
+
+            // Limpar a estrutura (tirar do aninhamento)
+            const listaLimpa = filteredList.map((item: any) => item.substage ? item.substage : item);
+            
             setSubstages(listaLimpa);
         } catch (error) {
-            console.error("Erro buscar subetapas", error);
+            console.error("Erro ao buscar subetapas:", error);
             setSubstages([]);
         }
     };
@@ -142,7 +165,7 @@ export function SubetapasPanel({ selectedStage }: SubetapasPanelProps) {
         }
     }, [selectedStage]);
 
-   
+    // --- Helpers de Exibição ---
     const getEmployeeName = (emp: any) => {
         if (emp.user && emp.user.name) return emp.user.name;
         const found = availableEmployees.find(u => u.id_user === emp.userId);
@@ -157,7 +180,7 @@ export function SubetapasPanel({ selectedStage }: SubetapasPanelProps) {
         return found ? `${found.name} (${found.unitMeasure})` : `ID: ${stock.materialStockId}`;
     };
 
-   
+    // --- Handlers de Adição ---
     const handleAddEmployee = () => {
         if (!addEmp.user_id || !addEmp.hours || !addEmp.func) return false;
         const user = availableEmployees.find(u => u.id_user === Number(addEmp.user_id));
@@ -179,7 +202,7 @@ export function SubetapasPanel({ selectedStage }: SubetapasPanelProps) {
         if (!stockItem) return false;
 
         setTempMaterials(prev => [...prev, {
-            item_id: Number(addMat.item_id), 
+            item_id: Number(addMat.item_id),
             name: stockItem.name,
             quantity_usage: Number(addMat.qtd),
             unit: stockItem.unitMeasure
@@ -206,6 +229,8 @@ export function SubetapasPanel({ selectedStage }: SubetapasPanelProps) {
             const isoDate = new Date(data.expDuration).toISOString();
 
             const payload = {
+                // Adicionado id_work por segurança, embora o backend atual use o stage_id
+                id_work: CURRENT_WORK_ID, 
                 stage_id: Number(selectedStage.id),
                 name: data.name,
                 expDuration: isoDate,
@@ -327,7 +352,7 @@ export function SubetapasPanel({ selectedStage }: SubetapasPanelProps) {
                                             return <option key={id} value={id}>{s.name} ({s.unitMeasure})</option>;
                                         })}
                                     </SelectForm>
-                                    <InputForm legend="Qtd:" type="number" value={addMat.qtd} onChange={e => setAddMat({...addMat, qtd: e.target.value})} containerClassName="w-1/3" />
+                                    <InputForm legend="Qtd:" type="number" value={addMat.qtd} onChange={e => setAddMat({...addMat, qtd: e.target.value})} containerClassName="w-24" />
                                     <button type="button" onClick={handleAddMaterial} className="bg-green-500 text-white px-3 py-1 rounded text-xs h-[28px] mb-[2px] font-bold">+</button>
                                 </div>
                                 <div className="mt-1 flex flex-wrap gap-1">
@@ -370,12 +395,12 @@ export function SubetapasPanel({ selectedStage }: SubetapasPanelProps) {
 
             <table className="bg-white border border-gray-300 w-full text-left mt-2 text-sm">
                 <thead>
-                    <tr className="bg-gray-200">
-                        <th className="px-2 py-1 border border-gray-300 w-1/4">Subetapa</th>
-                        <th className="px-2 py-1 border border-gray-300 w-1/4">Equipe</th>
-                        <th className="px-2 py-1 border border-gray-300 w-1/4">Materiais</th>
-                        <th className="px-2 py-1 border border-gray-300 w-1/6">Fim Previsto</th>
-                        <th className="px-2 py-1 border border-gray-300 w-12">Prog.</th>
+                    <tr className="bg-gray-300">
+                        <th className="px-1 border-1">Subetapa</th>
+                        <th className="px-1 border-1">Equipe</th>
+                        <th className="px-1 border-1">Materiais</th>
+                        <th className="px-1 border-1">Fim Previsto</th>
+                        <th className="px-1 border-1">Prog.</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -386,12 +411,12 @@ export function SubetapasPanel({ selectedStage }: SubetapasPanelProps) {
                         const dataFim = rawDate ? new Date(rawDate).toLocaleDateString() : "-";
 
                         return (
-                            <tr key={uniqueKey} onClick={() => setSelectedId(selectedId === item.id_substage ? null : item.id_substage)} className={`cursor-pointer hover:bg-blue-50 ${selectedId === item.id_substage ? 'bg-blue-200' : ''}`}>
-                                <td className="px-2 py-1 border border-gray-300">{item.name || "Sem nome"}</td>
+                            <tr key={uniqueKey} onClick={() => setSelectedId(selectedId === item.id_substage ? null : item.id_substage)} className={`cursor-pointer hover:bg-gray-50 ${selectedId === item.id_substage ? 'bg-blue-200' : ''}`}>
+                                <td className="px-1 border-1 align-bottom">{item.name || "Sem nome"}</td>
                                 
-                                <td className="px-2 py-1 border border-gray-300 text-xs align-top">
+                                <td className="px-1 border-1 text-xs align-middle">
                                     {item.substageEmployes && item.substageEmployes.length > 0 ? (
-                                        <div className="flex flex-col gap-1 mt-1">
+                                        <div className="flex flex-col gap-1 m-1">
                                             {item.substageEmployes.map((emp, idx) => (
                                                 <span key={idx} className="bg-white border border-gray-300 px-1 rounded shadow-sm block">
                                                     <strong>{getEmployeeName(emp)}</strong> ({emp.hours}h)
@@ -401,9 +426,9 @@ export function SubetapasPanel({ selectedStage }: SubetapasPanelProps) {
                                     ) : "-"}
                                 </td>
 
-                                <td className="px-2 py-1 border border-gray-300 text-xs align-top">
+                                <td className="px-1 border-1 text-xs align-middle">
                                     {item.substageStocks && item.substageStocks.length > 0 ? (
-                                        <div className="flex flex-col gap-1 mt-1">
+                                        <div className="flex flex-col gap-1 m-1">
                                             {item.substageStocks.map((stock, idx) => (
                                                 <span key={idx} className="bg-white border border-gray-300 px-1 rounded shadow-sm block">
                                                     {getMaterialName(stock)}: {stock.quantityUsed}
@@ -413,8 +438,8 @@ export function SubetapasPanel({ selectedStage }: SubetapasPanelProps) {
                                     ) : "-"}
                                 </td>
 
-                                <td className="px-2 py-1 border border-gray-300">{dataFim}</td>
-                                <td className="px-2 py-1 border border-gray-300">{item.progress || 0}%</td>
+                                <td className="px-1 border-1 align-bottom">{dataFim}</td>
+                                <td className="px-1 border-1 align-bottom">{item.progress || 0}%</td>
                             </tr>
                         );
                     })}

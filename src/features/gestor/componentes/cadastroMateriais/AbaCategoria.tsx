@@ -3,7 +3,6 @@ import { z, ZodError } from "zod";
 import { AxiosError } from "axios";
 import { InputForm } from "../InputForm";
 import { Button } from "../../../auth/components/Button";
-// Importando ícones
 import incluirSvg from "../../../../assets/incluir.svg";
 import editarSvg from "../../../../assets/editar.svg";
 import deletarSvg from "../../../../assets/deletar.svg";
@@ -15,6 +14,11 @@ interface CategoryData {
   id_type: number;
 }
 
+interface TypeData {
+  id: number;
+  name: string;
+}
+
 const categorySchema = z.object({
   name: z.string().min(1, "O nome da categoria é obrigatório"),
   id_type: z.coerce.number().int().positive("O ID do tipo deve ser válido"),
@@ -23,24 +27,34 @@ const categorySchema = z.object({
 export function CategoriasPanel() {
   const [isVisible, setIsVisible] = useState(false);
   const [categories, setCategories] = useState<CategoryData[]>([]);
+  const [types, setTypes] = useState<TypeData[]>([]); // << ADICIONADO
   const [loading, setLoading] = useState(true);
-  
-  // Controle de Seleção
+
   const [selectedId, setSelectedId] = useState<number | null>(null);
 
   const [formData, setFormData] = useState({
     name: "",
-    id_type: "1", 
+    id_type: "1",
   });
 
   const resetForm = () => {
     setFormData({ name: "", id_type: "1" });
   };
 
+  // ------------------ BUSCAR TIPOS ------------------
+  const fetchTypes = async () => {
+    try {
+      const response = await api.get(`/type/list/${formData.id_type}`);
+      setTypes(response.data.types || []);
+    } catch (error) {
+      console.error("Erro ao buscar tipos:", error);
+    }
+  };
+
+  // ---------------- BUSCAR CATEGORIAS ----------------
   const fetchCategories = async () => {
     try {
       const response = await api.get(`/category/list/${formData.id_type}`);
-      // Garante que é um array, mesmo se vier nulo
       setCategories(response.data.categories || []);
     } catch (error) {
       console.error("Erro ao buscar categorias:", error);
@@ -49,11 +63,16 @@ export function CategoriasPanel() {
     }
   };
 
+  // Carregar categorias + tipos ao iniciar
   useEffect(() => {
     fetchCategories();
+    fetchTypes(); // << ADICIONADO
   }, []);
 
-  // --- HANDLERS (Com Correção de Erro) ---
+  // Função para buscar o nome do tipo corretamente
+  const getTypeName = (id: number) => {
+    return types.find((t) => t.id === id)?.name || "—";
+  };
 
   const handleNewClick = () => {
     resetForm();
@@ -63,29 +82,27 @@ export function CategoriasPanel() {
 
   const handleEditClick = () => {
     if (!selectedId) {
-        return alert("Por favor, selecione uma categoria na tabela para editar.");
+      return alert("Por favor, selecione uma categoria na tabela para editar.");
     }
 
-    // Busca o item selecionado na lista atual
     const catToEdit = categories.find((c) => c.id === selectedId);
-    
-    // --- CORREÇÃO AQUI: Verifica se encontrou antes de usar ---
+
     if (catToEdit) {
       setFormData({
         name: catToEdit.name,
-        id_type: String(catToEdit.id_type), // Aqui dava o erro se fosse undefined
+        id_type: String(catToEdit.id_type),
       });
       setIsVisible(true);
     } else {
-        console.error("Categoria selecionada não encontrada na lista (pode ter sido excluída).");
-        setSelectedId(null); // Limpa a seleção fantasma
-        alert("Erro: A categoria selecionada não foi encontrada na lista atual.");
+      console.error("Categoria não encontrada na lista.");
+      setSelectedId(null);
+      alert("Erro: categoria não encontrada.");
     }
   };
 
   const handleDeleteClick = async () => {
     if (!selectedId) {
-        return alert("Por favor, selecione uma categoria na tabela para excluir.");
+      return alert("Selecione uma categoria para excluir.");
     }
 
     if (!confirm("Tem certeza que deseja excluir esta categoria?")) return;
@@ -94,23 +111,17 @@ export function CategoriasPanel() {
       setLoading(true);
       await api.delete(`/category/delete/${selectedId}`);
       alert("Categoria excluída com sucesso!");
-      
       setSelectedId(null);
       setIsVisible(false);
       resetForm();
       fetchCategories();
     } catch (error) {
       console.error(error);
-      if (error instanceof AxiosError) {
-        return alert(error.response?.data.error || "Erro ao excluir categoria.");
-      }
-      alert("Erro ao excluir a categoria.");
+      alert("Erro ao excluir categoria.");
     } finally {
       setLoading(false);
     }
   };
-
-  // --- FORMULÁRIO ---
 
   function handleInputChange(event: React.ChangeEvent<HTMLInputElement>) {
     const { name, value } = event.target;
@@ -128,7 +139,6 @@ export function CategoriasPanel() {
       });
 
       if (selectedId) {
-        // Enviar o objeto completo no update
         await api.put(`/category/update/${selectedId}`, data);
         alert("Categoria atualizada com sucesso!");
       } else {
@@ -146,23 +156,22 @@ export function CategoriasPanel() {
       if (error instanceof AxiosError) {
         return alert(error.response?.data.error || "Erro na requisição");
       }
-      alert("Não foi possível realizar a solicitação");
+      alert("Erro desconhecido.");
     } finally {
       setLoading(false);
     }
   }
 
-  // --- RENDERIZAÇÃO ---
-
   return (
     <div className="overflow-y-scroll h-[300px]">
-      
-      {/* FORMULÁRIO */}
+
+      {/* FORM */}
       {isVisible && (
         <div className="w-full space-y-2 py-2 px-4 bg-white rounded-lg shadow-md mb-4 border border-gray-200">
           <h3 className="text-sm font-bold text-gray-700 mb-2">
             {selectedId ? "Editar Categoria" : "Nova Categoria"}
           </h3>
+
           <div className="flex flex-row items-center gap-6">
             <InputForm
               legend="Nome da Categoria:"
@@ -172,6 +181,7 @@ export function CategoriasPanel() {
               required
               containerClassName="w-2/3"
             />
+
             <InputForm
               legend="ID Tipo:"
               value={formData.id_type}
@@ -182,16 +192,17 @@ export function CategoriasPanel() {
             />
           </div>
 
-          <div className="flex gap-2 mt-2">
+          <div className="flex gap-2 mt-2 justify-end">
             <Button
               className="px-4 h-[26px] text-sm bg-gray-350 text-black hover:bg-gray-300 border border-gray-400"
               onClick={handleSubmit}
               isLoading={loading}
             >
-              Confirmar
+              {selectedId ? "Salvar Alterações" : "Confirmar"}
             </Button>
+
             <Button
-              className="px-4 h-[26px] text-sm bg-red-100 text-red-600 hover:bg-red-200 border border-red-300"
+              className="px-4 h-[26px] text-sm bg-red-100 text-red-800 hover:bg-red-200 border border-red-300"
               onClick={() => { setIsVisible(false); resetForm(); }}
               type="button"
             >
@@ -201,7 +212,7 @@ export function CategoriasPanel() {
         </div>
       )}
 
-      {/* BOTÕES PADRONIZADOS */}
+      {/* BOTÕES */}
       <div className="flex justify-end mt-4 mb-2 gap-2">
         <Button
           className="flex items-center gap-2 px-4 h-[26px] text-sm bg-gray-350 text-black hover:bg-gray-300 rounded-none border-1 border-gray-400"
@@ -210,60 +221,63 @@ export function CategoriasPanel() {
           <img src={incluirSvg} alt="Incluir" className="w-4 h-4" />
           Incluir
         </Button>
-        
-        <Button 
-            onClick={handleEditClick}
-            className={`flex items-center gap-2 px-4 h-[26px] text-sm rounded-none border-1 border-gray-400 ${selectedId ? 'bg-blue-100 text-blue-800 hover:bg-blue-200' : 'bg-gray-200 text-gray-500 cursor-not-allowed'}`}
-            disabled={!selectedId}
+
+        <Button
+          onClick={handleEditClick}
+          className={`flex items-center gap-2 px-4 h-[26px] text-sm rounded-none border-1 border-gray-400 ${selectedId ? "bg-blue-100 text-blue-800 hover:bg-blue-200" : "bg-gray-200 text-gray-500 cursor-not-allowed"}`}
+          disabled={!selectedId}
         >
-            <img src={editarSvg} alt="Editar" className="w-4 h-4" />
-            Editar
+          <img src={editarSvg} alt="Editar" className="w-4 h-4" />
+          Editar
         </Button>
-        
-        <Button 
-            onClick={handleDeleteClick}
-            className={`flex items-center gap-2 px-4 h-[26px] text-sm rounded-none border-1 border-gray-400 ${selectedId ? 'bg-red-100 text-red-800 hover:bg-red-200 border-red-300' : 'bg-gray-200 text-gray-500 cursor-not-allowed'}`}
-            disabled={!selectedId}
+
+        <Button
+          onClick={handleDeleteClick}
+          className={`flex items-center gap-2 px-4 h-[26px] text-sm rounded-none border-1 border-gray-400 ${selectedId ? "bg-red-100 text-red-800 hover:bg-red-200 border-red-300" : "bg-gray-200 text-gray-500 cursor-not-allowed"}`}
+          disabled={!selectedId}
         >
-            <img src={deletarSvg} alt="Excluir" className="w-4 h-4" />
-            Excluir
+          <img src={deletarSvg} alt="Excluir" className="w-4 h-4" />
+          Excluir
         </Button>
       </div>
 
-      {/* TABELA LIMPA */}
+      {/* TABELA */}
       <table className="bg-white border-1 border-gray-500 w-full text-left">
         <thead>
           <tr className="bg-gray-300">
-            <th className="px-2 border-1 w-20">ID</th>
-            <th className="px-2 border-1">Nome</th>
-            <th className="px-2 border-1 w-32">ID Tipo</th>
+            <th className="px-2 border-1">Categoria</th>
+            <th className="px-2 border-1 w-32">Tipo</th>
           </tr>
         </thead>
+
         <tbody>
           {loading && categories.length === 0 ? (
-             <tr><td colSpan={3} className="p-4 text-center">Carregando...</td></tr>
+            <tr><td colSpan={3} className="p-4 text-center">Carregando...</td></tr>
           ) : categories.length === 0 ? (
-             <tr><td colSpan={3} className="p-4 text-center text-gray-500">Nenhuma categoria cadastrada.</td></tr>
+            <tr><td colSpan={3} className="p-4 text-center text-gray-500">Nenhuma categoria cadastrada.</td></tr>
           ) : (
             categories.map((category) => (
               <tr
                 key={category.id}
                 onClick={() => {
-                    if (selectedId === category.id) {
-                        setSelectedId(null);
-                        setIsVisible(false);
-                        resetForm();
-                    } else {
-                        setSelectedId(category.id);
-                        setIsVisible(false);
-                        resetForm();
-                    }
+                  if (selectedId === category.id) {
+                    setSelectedId(null);
+                    setIsVisible(false);
+                    resetForm();
+                  } else {
+                    setSelectedId(category.id);
+                    setIsVisible(false);
+                    resetForm();
+                  }
                 }}
-                className={`text-sm border-b-1 border-gray-500 cursor-pointer hover:bg-gray-200 ${selectedId === category.id ? 'bg-blue-200' : ''}`}
+                className={`text-sm border-b-1 border-gray-500 cursor-pointer hover:bg-gray-50 ${
+                  selectedId === category.id ? "bg-blue-200" : ""
+                }`}
               >
-                <td className="px-2 border-1">{category.id}</td>
                 <td className="px-2 border-1 font-medium">{category.name}</td>
-                <td className="px-2 border-1">{category.id_type}</td>
+
+                {/* <<< AQUI TROCAMOS O ID PELO NOME DO TIPO >>> */}
+                <td className="px-2 border-1">{getTypeName(category.id_type)}</td>
               </tr>
             ))
           )}
