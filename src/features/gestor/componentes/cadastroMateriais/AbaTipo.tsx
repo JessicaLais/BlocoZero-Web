@@ -80,31 +80,47 @@ export function TiposPanel() {
 
   const handleDeleteClick = async () => {
     if (!selectedId) {
-        return alert("Por favor, selecione um tipo na tabela para excluir.");
+      return alert("Por favor, selecione um tipo na tabela para excluir.");
     }
 
-    if (!confirm("Tem certeza que deseja excluir este tipo?")) return;
+    const typeName = types.find((t) => t.id === selectedId)?.name || "—";
+
+    const warningMessage = `
+      ⚠️ ATENÇÃO ⚠️
+
+      Excluir este TIPO irá deletar boa parte das informações relacionadas a ele no sistema.
+
+      ❌ ESTA AÇÃO É DESTRUTIVA E NÃO PODE SER DESFEITA  
+
+      Tem certeza que deseja continuar?
+      `;
+
+    if (!confirm(warningMessage)) return;
 
     try {
       setLoading(true);
+
       await api.delete(`/type/delete/${selectedId}`);
-      
-      alert("Tipo excluído com sucesso!");
-      
+
+      alert("Tipo e todos os dados relacionados foram removidos com sucesso!");
+
       setSelectedId(null);
       setIsVisible(false);
       resetForm();
-      fetchTypes(); 
+      fetchTypes();
     } catch (error) {
       console.error(error);
+
       if (error instanceof AxiosError) {
-         return alert(error.response?.data.error || "Erro ao excluir tipo.");
+        return alert(error.response?.data.error || "Erro ao excluir tipo.");
       }
+
       alert("Erro ao excluir o tipo.");
     } finally {
       setLoading(false);
     }
   };
+
 
   // --- FORMULÁRIO ---
 
@@ -170,7 +186,7 @@ export function TiposPanel() {
             />
             {/* O ID da obra pode ficar oculto ou visível dependendo da regra, mantive visível para debug */}
             <InputForm
-              legend="ID Obra:"
+              legend="ID da Obra:"
               value={formData.work_id}
               onChange={handleInputChange}
               name="work_id"
@@ -232,9 +248,8 @@ export function TiposPanel() {
       <table className="bg-white border-1 border-gray-500 w-full text-left">
         <thead>
           <tr className="bg-gray-300">
-            <th className="px-2 border-1 w-24">ID</th>
-            <th className="px-2 border-1">Nome do Tipo</th>
-            <th className="px-2 border-1 w-32">ID Obra</th>
+            <th className="px-2 border-1">Tipo</th>
+            <th className="px-2 border-1 w-32">ID da obra</th>
           </tr>
         </thead>
         <tbody>
@@ -259,7 +274,6 @@ export function TiposPanel() {
                 // Estilo condicional: Azul se selecionado, Cinza no Hover
                 className={`text-sm border-b-1 border-gray-500 cursor-pointer hover:bg-gray-50 ${selectedId === type.id ? 'bg-blue-200' : ''}`}
               >
-                <td className="px-2 border-1">{type.id}</td>
                 <td className="px-2 border-1">{type.name}</td>
                 <td className="px-2 border-1">{type.work_id}</td>
               </tr>
