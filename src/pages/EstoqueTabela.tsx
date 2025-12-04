@@ -64,7 +64,7 @@ export default function EstoqueTab() {
   }
 
   return (
-    <div className="p-6 bg-gray-50 flex flex-col w-[1400px] h-[600px]">
+    <div className="p-6 bg-gray-50 flex flex-col w-full h-full">
       <h1 className="text-2xl font-semibold text-gray-800 mb-6 flex items-center gap-2">
         <span className="w-2 h-8 bg-[#607D8B] rounded-md"></span>
         Controle de Estoque da Obra
