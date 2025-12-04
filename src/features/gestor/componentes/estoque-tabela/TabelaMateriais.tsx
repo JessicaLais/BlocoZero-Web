@@ -102,6 +102,8 @@ export default function TabelaMateriais({ endpoint }: TabelaMateriaisProps) {
     });
   }, [materiaisBrutos, filterParams]);
 
+  
+
   if (loading) {
     return (
       <div className="flex items-center justify-center h-32 text-gray-400">
@@ -184,7 +186,7 @@ export default function TabelaMateriais({ endpoint }: TabelaMateriaisProps) {
       )}
 
       {/* Tabela */}
-      <div className="overflow-y-auto rounded-2xl w-[1350px] h-[400px] border border-[#c4c4c4] shadow-sm bg-white">
+      <div className="overflow-y-auto rounded-2xl w-full h-full border border-[#c4c4c4] shadow-sm bg-white">
         <table className="min-w-full border-collapse">
           <thead className="bg-white text-gray-700 sticky top-0 z-10">
             <tr>
