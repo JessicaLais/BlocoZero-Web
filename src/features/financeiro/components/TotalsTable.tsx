@@ -6,7 +6,7 @@ interface TotalsTableProps {
 
 export function TotalsTable({ mesesLabels, totaisMensais, totaisAcumulados }: TotalsTableProps) {
   
-  const formatMoney = (val: number) => val.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  const formatMoney = (val: number) => val.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
 
   const commonCell = "bg-white border-gray-300 px-4 py-4 whitespace-nowrap";
   const labelCell = `${commonCell} font-semibold text-gray-900 text-left`;
