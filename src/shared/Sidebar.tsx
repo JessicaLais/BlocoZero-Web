@@ -60,28 +60,28 @@ const sidebarLinks = [
     },
     {
         label: 'Estoque',
-        to: '#', 
+        to: '/tabela-estoque', 
         icon: images.Estoque,
         roles: ['manager']
     },
-    {
+   /* {
         label: 'Solicitações',
         to: '#', 
         icon: images.Solicitaçoes,
         roles: ['manager']
-    },
+    },*/
     {
         label: 'Relatórios',
-        to: '#',
+        to: '/financeiro',
         icon: images.Relatorios,
         roles: ['manager']
     },
-    {
+   /* {
         label: 'Dashboards',
         to: '#', 
         icon: images.Dashboards,
         roles: ['manager']
-    }
+    }*/
 ];
 
 export function Sidebar() {
