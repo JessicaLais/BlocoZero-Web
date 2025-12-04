@@ -27,7 +27,7 @@ const categorySchema = z.object({
 export function CategoriasPanel() {
   const [isVisible, setIsVisible] = useState(false);
   const [categories, setCategories] = useState<CategoryData[]>([]);
-  const [types, setTypes] = useState<TypeData[]>([]); // << ADICIONADO
+  const [types, setTypes] = useState<TypeData[]>([]); 
   const [loading, setLoading] = useState(true);
 
   const [selectedId, setSelectedId] = useState<number | null>(null);
@@ -41,7 +41,6 @@ export function CategoriasPanel() {
     setFormData({ name: "", id_type: "1" });
   };
 
-  // ------------------ BUSCAR TIPOS ------------------
   const fetchTypes = async () => {
     try {
       const response = await api.get(`/type/list/${formData.id_type}`);
@@ -51,7 +50,6 @@ export function CategoriasPanel() {
     }
   };
 
-  // ---------------- BUSCAR CATEGORIAS ----------------
   const fetchCategories = async () => {
     try {
       const response = await api.get(`/category/list/${formData.id_type}`);
@@ -63,13 +61,11 @@ export function CategoriasPanel() {
     }
   };
 
-  // Carregar categorias + tipos ao iniciar
   useEffect(() => {
     fetchCategories();
-    fetchTypes(); // << ADICIONADO
+    fetchTypes(); 
   }, []);
 
-  // Função para buscar o nome do tipo corretamente
   const getTypeName = (id: number) => {
     return types.find((t) => t.id === id)?.name || "—";
   };
@@ -165,7 +161,6 @@ export function CategoriasPanel() {
   return (
     <div className="overflow-y-scroll h-[300px]">
 
-      {/* FORM */}
       {isVisible && (
         <div className="w-full space-y-2 py-2 px-4 bg-white rounded-lg shadow-md mb-4 border border-gray-200">
           <h3 className="text-sm font-bold text-gray-700 mb-2">
@@ -212,7 +207,6 @@ export function CategoriasPanel() {
         </div>
       )}
 
-      {/* BOTÕES */}
       <div className="flex justify-end mt-4 mb-2 gap-2">
         <Button
           className="flex items-center gap-2 px-4 h-[26px] text-sm bg-gray-350 text-black hover:bg-gray-300 rounded-none border-1 border-gray-400"
@@ -241,7 +235,6 @@ export function CategoriasPanel() {
         </Button>
       </div>
 
-      {/* TABELA */}
       <table className="bg-white border-1 border-gray-500 w-full text-left">
         <thead>
           <tr className="bg-gray-300">
@@ -275,8 +268,6 @@ export function CategoriasPanel() {
                 }`}
               >
                 <td className="px-2 border-1 font-medium">{category.name}</td>
-
-                {/* <<< AQUI TROCAMOS O ID PELO NOME DO TIPO >>> */}
                 <td className="px-2 border-1">{getTypeName(category.id_type)}</td>
               </tr>
             ))
