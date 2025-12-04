@@ -35,9 +35,8 @@ export function Fin() {
     carregarDados();
   }, []);
 
-  // --- 2. CABEÇALHO DA TABELA (Meses) ---
   const headers = useMemo(() => {
-    // Se não tem dados ou a tabela está vazia, retorna array vazio para não quebrar
+    
     if (!relatorio || !relatorio.tabela_dados || relatorio.tabela_dados.length === 0) return [];
     
     // Pega os meses da primeira linha para montar o cabeçalho
