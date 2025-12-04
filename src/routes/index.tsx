@@ -1,5 +1,4 @@
-// Em src/routes/index.tsx
-import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom"; // <-- TUDO DE "react-router-dom"
+import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom"; 
 import { useAuth } from "../hooks/useAuth.tsx";
 import { AppLayout } from "../shared/AppLayout";
 
@@ -13,6 +12,8 @@ import { Orçamento } from "../pages/Orçamento";
 import { Fin } from "../pages/Financeiro";
 import EstoqueTab from "../pages/EstoqueTabela";
 import { CronogramaPage } from "../pages/CronogramaFisico";
+
+import { Relatorios } from "../pages/Relatorios";
 
 function AppRoutes() {
     const { session } = useAuth();
@@ -38,7 +39,8 @@ function AppRoutes() {
                         <Route path="/estoque" element={<EstoqueList />} />
                         <Route path="/estoque/:work_id" element={<EstoqueObra />} />
                         <Route path="/" element={<Navigate to="/work" />} />
-                    </>
+                        <Route path="/relatorios" element={<Relatorios />} />
+                     </>
                 )}
 
                 <Route path="*" element={<Navigate to="/" />} />

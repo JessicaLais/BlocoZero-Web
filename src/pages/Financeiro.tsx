@@ -7,16 +7,20 @@ import { EtapaRow } from '../features/financeiro/components/EtapaRow';
 import { TotalsTable } from '../features/financeiro/components/TotalsTable';
 
 import { financeiroService } from '../services/financeiroService';
-import type { RelatorioFinanceiroDTO } from '../dtos/financeiro'; // Agora vai achar o arquivo que criamos!
- // Agora vai achar o arquivo que criamos!
+import type { RelatorioFinanceiroDTO } from '../dtos/financeiro';
 
 export function Fin() {
   const [searchTerm, setSearchTerm] = useState("");
   const [loading, setLoading] = useState(true);
   const [relatorio, setRelatorio] = useState<RelatorioFinanceiroDTO | null>(null);
 
-  // ID DA OBRA (Ainda fixo para teste)
   const WORK_ID = 1; 
+
+  const formatarValor = (valor: string | number | undefined) => {
+    if (!valor) return "R$ 0,00";
+    const numero = Number(valor);
+    return isNaN(numero) ? "R$ 0,00" : numero.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+  };
 
   // --- 1. BUSCA DE DADOS ---
   useEffect(() => {
@@ -24,7 +28,6 @@ export function Fin() {
       try {
         setLoading(true);
         const dados = await financeiroService.getRelatorio(WORK_ID);
-        console.log("DADOS REAIS DO BACKEND:", dados);
         setRelatorio(dados);
       } catch (error) {
         console.error("Erro ao carregar tabela:", error);
@@ -36,16 +39,32 @@ export function Fin() {
   }, []);
 
   const headers = useMemo(() => {
-    
     if (!relatorio || !relatorio.tabela_dados || relatorio.tabela_dados.length === 0) return [];
-    
-    // Pega os meses da primeira linha para montar o cabeçalho
     return relatorio.tabela_dados[0].cronograma_financeiro.map(c => c.mes);
   }, [relatorio]);
 
-  // --- 3. CÁLCULO DOS TOTAIS ---
+  const tableData = useMemo(() => {
+    if (!relatorio?.tabela_dados) return [];
+
+    const dadosMapeados = relatorio.tabela_dados.map(linha => ({
+      etapaNome: linha.nome_etapa,
+      totalEtapa: formatarValor(linha.total_etapa),
+      mesesRaw: linha.cronograma_financeiro, 
+      mesesVisuais: linha.cronograma_financeiro.map(c => ({
+          percent: c.porcentagem,
+          value: c.valor_bruto.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })
+      }))
+    }));
+
+    if (!searchTerm) return dadosMapeados;
+
+    return dadosMapeados.filter(item => 
+      item.etapaNome.toLowerCase().includes(searchTerm.toLowerCase())
+    );
+
+  }, [relatorio, searchTerm]); 
+
   const { totaisMensais, totaisAcumulados } = useMemo(() => {
-    // Proteção contra dados nulos
     if (!relatorio || !relatorio.tabela_dados || relatorio.tabela_dados.length === 0) {
       return { totaisMensais: [], totaisAcumulados: [] };
     }
@@ -55,16 +74,13 @@ export function Fin() {
     const somaAcumulada: number[] = [];
     let acumulador = 0;
 
-    // Percorre colunas (meses)
     for (let i = 0; i < qtdMeses; i++) {
-      // Percorre linhas (etapas)
       relatorio.tabela_dados.forEach(linha => {
         const itemMes = linha.cronograma_financeiro[i];
         if (itemMes) {
           somaMensal[i] += itemMes.valor_bruto;
         }
       });
-      // Acumula
       acumulador += somaMensal[i];
       somaAcumulada.push(acumulador);
     }
@@ -81,23 +97,22 @@ export function Fin() {
     <div className="min-h-screen bg-[#F5F5F5] p-4 md:p-8 overflow-x-hidden">
       <main className="w-full max-w-[1600px] mx-auto">
         
-        {/* HEADER & CARDS */}
+        {/* HEADER */}
         <section className="flex flex-col md:flex-row items-end justify-start gap-4 mb-8 flex-wrap">
           <div className="flex gap-4 md:gap-6 overflow-x-auto pb-2 max-w-full">
-             {/* PROTEÇÃO AQUI: Adicionei ?. antes de acessar as propriedades */}
              <InfoCard 
                 title="Valor do contrato" 
-                value={relatorio?.resumo?.valor_contrato || "R$ 0,00"} 
+                value={formatarValor(relatorio?.resumo?.valor_contrato)} 
                 icon={<img src={IconeDinheiro} alt="Dinheiro" className="w-12 h-12" />} 
              />
              <InfoCard 
                 title="Total Acumulado" 
-                value={relatorio?.resumo?.total_acumulado_obra || "R$ 0,00"} 
+                value={formatarValor(relatorio?.resumo?.total_acumulado_obra)} 
                 icon={<img src={IconeDinheiro} alt="Dinheiro" className="w-12 h-12" />} 
              />
              <InfoCard 
                 title="Disponível" 
-                value={relatorio?.resumo?.valor_disponivel || "R$ 0,00"} 
+                value={formatarValor(relatorio?.resumo?.valor_disponivel)} 
                 icon={<img src={IconeDinheiro} alt="Dinheiro" className="w-12 h-12" />} 
              />
           </div>
@@ -136,23 +151,19 @@ export function Fin() {
                 </tr>
               </thead> 
               <tbody>
-                {relatorio?.tabela_dados && relatorio.tabela_dados.length > 0 ? (
-                  relatorio.tabela_dados.map((linha, index) => (
+                {tableData.length > 0 ? (
+                  tableData.map((linha, index) => (
                     <EtapaRow 
                       key={index} 
-                      etapaNome={linha.nome_etapa}
-                      totalEtapa={linha.total_etapa}
-                      meses={linha.cronograma_financeiro.map(c => ({
-                      percent: c.porcentagem,
-                      value: c.valor_bruto.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })
-                      }))}
+                      etapaNome={linha.etapaNome}
+                      totalEtapa={linha.totalEtapa}
+                      meses={linha.mesesVisuais}
                     />
                   ))
                 ) : (
                   <tr>
                     <td colSpan={headers.length > 0 ? headers.length + 2 : 2} className="p-8 text-center text-gray-500">
-                      Nenhum dado encontrado para o relatório. <br/>
-                      (Verifique se a API está rodando e se a obra tem dados)
+                      {searchTerm ? "Nenhuma etapa encontrada com esse nome." : "Nenhum dado financeiro disponível."}
                     </td>
                   </tr>
                 )}
