@@ -1,6 +1,5 @@
 import { type ChangeEvent } from "react";
 
-// Definimos a tipagem do objeto de filtros
 export interface FiltersState {
   code: string;
   name: string;
@@ -18,21 +17,19 @@ export function FilterStatic({ filters, onFilterChange }: FilterStaticProps) {
       <h3 className="text-lg font-bold mb-2">Filtrar Insumos</h3>
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         
-        {/* Campo Código */}
         <div className="flex flex-col">
           <label htmlFor="code" className="mb-1 text-sm font-medium">Código:</label>
           <input
             type="text"
             id="code"
             name="code"
-            value={filters.code} // Valor controlado pelo estado
-            onChange={onFilterChange} // Função disparada ao digitar
+            value={filters.code} 
+            onChange={onFilterChange} 
             className="p-2 border bg-white border-gray-300 rounded-md outline-none focus:border-blue-500"
             placeholder="Filtrar por código..."
           />
         </div>
 
-        {/* Campo Nome */}
         <div className="flex flex-col">
           <label htmlFor="name" className="mb-1 text-sm font-medium">Nome:</label>
           <input
@@ -46,7 +43,6 @@ export function FilterStatic({ filters, onFilterChange }: FilterStaticProps) {
           />
         </div>
 
-        {/* Campo Tipo */}
         <div className="flex flex-col">
           <label htmlFor="type" className="mb-1 text-sm font-medium">Tipo:</label>
           <select

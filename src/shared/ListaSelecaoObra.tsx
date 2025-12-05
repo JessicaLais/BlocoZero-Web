@@ -6,14 +6,12 @@ import searchSvg from "../assets/search.svg";
 import { Button } from "../features/home/components/Button"; 
 import { Pagination } from "../features/home/components/Pagination"; 
 
-// --- INTERFACE DAS PROPS ---
 interface Props {
     title: string;
     onSelect: (workId: string) => void;
 }
 
 export function ListaSelecaoObra({ title, onSelect }: Props) {
-    // Mantemos o ID fixo por enquanto, ou você pode pegar da sessão se preferir depois
     const ENTERPRISE_ID = 1;
 
     // Estados
@@ -21,24 +19,20 @@ export function ListaSelecaoObra({ title, onSelect }: Props) {
     const [filteredWorks, setFilteredWorks] = useState<SessionItemProps[]>([]); 
     const [searchTerm, setSearchTerm] = useState("");
     
-    // Paginação
     const [page, setPage] = useState(1);
     const itemsPerPage = 5;
 
     useEffect(() => {
         const fetchWorks = async () => {
             try {
-                // Busca TODAS as obras da empresa, sem filtros de usuário
                 const response = await api.get(`/work/list/${ENTERPRISE_ID}`);
                 const data = response.data;
                 
                 let list: SessionItemProps[] = [];
                 
-                // Normalização dos dados (caso venha array direto ou objeto { works: [] })
                 if (Array.isArray(data)) list = data;
                 else if (data.works && Array.isArray(data.works)) list = data.works;
                 
-                // Seta todas as obras para exibição
                 setAllWorks(list);
                 setFilteredWorks(list);
             } catch (error) {
