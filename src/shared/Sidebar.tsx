@@ -4,7 +4,16 @@ import Teste from "../assets/Teste.png";
 import { Link, NavLink } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth'; 
 import { images } from '../assets';
-const sidebarLinks = [
+
+interface SidebarLink {
+    label: string;
+    to: string;
+    icon: any;
+    roles: string[];
+    children?: SidebarLink[];
+}
+
+const sidebarLinks: SidebarLink[] = [
     {
         label: 'Início',
         to: '/work',
@@ -13,26 +22,16 @@ const sidebarLinks = [
     },
     {
         label: 'Cronograma',
-        to: '#', 
+        to: '/cronograma-fisico', 
         icon: FaCalendarAlt,
         roles: ['tender'] 
     },
     {
         label: 'Estoque',
+        to: '/estoque', 
         icon: FaBox,
-        roles: ['tender'], 
-        children: [
-            {
-                label: 'Consultar',
-                to: '/estoque',
-                roles: ['tender'] 
-            },
-            {
-                label: 'Registrar',
-                to: '/registrar-equipamentos',
-                roles: ['tender'] 
-            }
-        ]
+        roles: ['tender'] 
+        
     },
     {
         label: 'Relatórios',
@@ -54,7 +53,7 @@ const sidebarLinks = [
     },
     {
         label: 'Orçamento',
-        to: '/orçamento', 
+        to: '/orcamento', 
         icon: images.Orçamento,
         roles: ['manager'] 
     },
@@ -64,7 +63,7 @@ const sidebarLinks = [
         icon: images.Estoque,
         roles: ['manager']
     },
-   /* {
+    /* {
         label: 'Solicitações',
         to: '#', 
         icon: images.Solicitaçoes,
@@ -76,7 +75,7 @@ const sidebarLinks = [
         icon: images.Relatorios,
         roles: ['manager']
     },
-   /* {
+    /* {
         label: 'Dashboards',
         to: '#', 
         icon: images.Dashboards,
@@ -116,6 +115,7 @@ export function Sidebar() {
                         .filter(link => link.roles.includes(userRole)) 
                         .map(link => (
                             
+                            // Como removemos o 'children' do Estoque, ele cairá automaticamente neste bloco 'if'
                             !link.children ? (
                                 <NavLink
                                     key={link.label}
@@ -123,59 +123,54 @@ export function Sidebar() {
                                     className={({ isActive }) =>
                                         `flex items-center gap-3 font-semibold transition ease-linear rounded-md  ${
                                         isActive ? 'bg-blue-400' : 'hover:bg-gray-600'
-                                    }`
+                                        }`
                                     }
                                 >
                                     {typeof link.icon === 'string' ? (
-                                        
                                         <img src={link.icon} alt={link.label} className="w-5 h-5" />
                                     ) : (
-                                        
                                         <link.icon size={20} />
                                     )}
                                     <span>{link.label}</span>
                                 </NavLink>
                             ) : (
-                                
-                            <div key={link.label} className="relative">
-                                <button
-                                    onClick={() => handleDropdownClick(link.label)}
-                                    className="flex items-center justify-between w-full p-2 hover:bg-gray-600 transition ease-linear rounded-md"
-                                >
-                                    <div className="flex items-center gap-3">
-                                        {typeof link.icon === 'string' ? (
-                                            
-                                            <img src={link.icon} alt={link.label} className="w-5 h-5" />
-                                        ) : (
-                                            
-                                            <link.icon size={20} />
-                                        )}
-                                        <span>{link.label}</span>
-                                    </div>
-                                    {openDropdown === link.label ? <FaCaretUp /> : <FaCaretDown />}
-                                </button>
-                                {openDropdown === link.label && (
-                                    <div className="flex flex-col gap-2 px-3 mt-2">
-                                        {link.children
-                                            
-                                            .filter(child => child.roles.includes(userRole))
-                                            .map(child => (
-                                                <NavLink
-                                                    key={child.label}
-                                                    to={child.to}
-                                                    className={({ isActive }) =>
-                                                        `p-2 text-sm rounded-md ${
-                                                        isActive ? 'bg-blue-500 font-bold' : 'hover:bg-gray-600'
-                                                    }`
-                                                    }
-                                                >
-                                                    {child.label}
-                                                </NavLink>
-                                            ))
-                                        }
-                                    </div>
-                                )}
-                            </div>
+                                // Este bloco agora só será usado se houver outros itens com submenu no futuro
+                                <div key={link.label} className="relative">
+                                    <button
+                                        onClick={() => handleDropdownClick(link.label)}
+                                        className="flex items-center justify-between w-full p-2 hover:bg-gray-600 transition ease-linear rounded-md"
+                                    >
+                                        <div className="flex items-center gap-3">
+                                            {typeof link.icon === 'string' ? (
+                                                <img src={link.icon} alt={link.label} className="w-5 h-5" />
+                                            ) : (
+                                                <link.icon size={20} />
+                                            )}
+                                            <span>{link.label}</span>
+                                        </div>
+                                        {openDropdown === link.label ? <FaCaretUp /> : <FaCaretDown />}
+                                    </button>
+                                    {openDropdown === link.label && (
+                                        <div className="flex flex-col gap-2 px-3 mt-2">
+                                            {link.children
+                                                .filter(child => child.roles.includes(userRole))
+                                                .map(child => (
+                                                    <NavLink
+                                                        key={child.label}
+                                                        to={child.to}
+                                                        className={({ isActive }) =>
+                                                            `p-2 text-sm rounded-md ${
+                                                            isActive ? 'bg-gray-600 font-bold' : 'hover:bg-gray-600'
+                                                            }`
+                                                        }
+                                                    >
+                                                        {child.label}
+                                                    </NavLink>
+                                                ))
+                                            }
+                                        </div>
+                                    )}
+                                </div>
                             )
                         ))
                     }

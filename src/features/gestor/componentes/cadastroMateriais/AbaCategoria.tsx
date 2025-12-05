@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { z, ZodError } from "zod";
 import { InputForm } from "../InputForm";
-import { SelectForm } from "../SelectForm"; // Importe o seu SelectForm
+import { SelectForm } from "../SelectForm"; 
 import { Button } from "../../../auth/components/Button";
 import incluirSvg from "../../../../assets/incluir.svg";
 import editarSvg from "../../../../assets/editar.svg";
@@ -40,25 +40,22 @@ export function CategoriasPanel({ workId }: Props) {
 
   const [formData, setFormData] = useState({
     name: "",
-    id_type: "", // String para controlar o select vazio
+    id_type: "", 
   });
 
   const resetForm = () => {
     setFormData({ name: "", id_type: "" });
   };
 
-  // 1. Busca os Tipos desta Obra (para o Select)
   const fetchTypes = async () => {
     try {
         const response = await api.get(`/type/list/${workId}`);
         
-        // Log para você conferir no F12 se os dados estão chegando
         console.log("Tipos recebidos da API:", response.data);
 
         const rawData = response.data.types || response.data || [];
         
         if (Array.isArray(rawData)) {
-            // REMOVI O FILTRO: Usamos os dados direto do backend
             setTypes(rawData);
             return rawData; 
         }
@@ -72,24 +69,12 @@ export function CategoriasPanel({ workId }: Props) {
     }
   };
 
-  // 2. Busca Categorias (baseadas nos Tipos da obra)
   const fetchCategories = async (currentTypes: TypeData[]) => {
     try {
-        // Se a API de categorias pedir ID do tipo, teríamos que fazer um loop.
-        // Se a API tiver endpoint global ou por obra, melhor.
-        // Assumindo que /category/list retorna tudo ou precisa de id_type:
         
-        // Estratégia: Vamos buscar TODAS as categorias (ou iterar pelos tipos)
-        // Se sua API suportar /category/list/work/:id seria ideal.
-        // Como não sei a rota exata, vou assumir que você busca por Tipo ID 1 (como estava no seu código)
-        // OU iteramos pelos tipos disponíveis.
-        
-        // VAMOS TENTAR: Buscar todas e filtrar no front (se o backend permitir listar tudo)
-        // Se o backend exige ID do tipo na URL (/category/list/:id_type), teremos que fazer várias chamadas.
         
         let allCats: CategoryData[] = [];
         
-        // Opção Segura: Iterar pelos tipos da obra e buscar suas categorias
         for (const type of currentTypes) {
             try {
                 const res = await api.get(`/category/list/${type.id}`);
@@ -97,10 +82,9 @@ export function CategoriasPanel({ workId }: Props) {
                 if(Array.isArray(cats)) {
                     allCats = [...allCats, ...cats];
                 }
-            } catch (e) { /* ignora erro de tipo vazio */ }
+            } catch (e) {}
         }
         
-        // Remove duplicatas se houver
         const uniqueCats = Array.from(new Set(allCats.map(a => a.id)))
             .map(id => allCats.find(a => a.id === id)!);
 
@@ -157,7 +141,6 @@ export function CategoriasPanel({ workId }: Props) {
       setSelectedId(null);
       setIsVisible(false);
       
-      // Recarrega
       const myTypes = await fetchTypes();
       await fetchCategories(myTypes);
       
@@ -220,7 +203,6 @@ export function CategoriasPanel({ workId }: Props) {
               containerClassName="w-2/3"
             />
 
-            {/* Select de Tipos (Só mostra tipos desta obra) */}
             <SelectForm
               legend="Tipo:"
               value={formData.id_type}

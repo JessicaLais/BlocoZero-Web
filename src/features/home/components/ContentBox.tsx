@@ -7,7 +7,7 @@ export type ContentBoxProps = {
         start_time?: string | null;
         end_time?: string | null;
         address: string;
-        describe: string;
+        description: string;
     }
 }
 export function ContentBox({data}: ContentBoxProps) {
@@ -29,7 +29,7 @@ export function ContentBox({data}: ContentBoxProps) {
                     <h1 className='font-bold text-2xl 2xl:text-4xl text-gray-800 mb-2'>{data.title}</h1>
                     <p className="text-gray-600"><strong>Local:</strong> {data.address}</p>
                     
-                    <p className="text-gray-600"><strong>Descrição:</strong> {data.describe}</p>
+                    <p className="text-gray-600"><strong>Descrição:</strong> {data.description}</p>
                     <p className="text-gray-600"><strong>Data de inicio:</strong> {formattedStartDate}</p>
                     <p className="text-gray-600"><strong>Previsão de Termino:</strong> {formattedEndDate}</p>
                 </section>
