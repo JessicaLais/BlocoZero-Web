@@ -12,8 +12,8 @@ interface Props {
     onSelect: (workId: string) => void;
 }
 
-
 export function ListaSelecaoObra({ title, onSelect }: Props) {
+    // Mantemos o ID fixo por enquanto, ou você pode pegar da sessão se preferir depois
     const ENTERPRISE_ID = 1;
 
     // Estados
@@ -28,13 +28,17 @@ export function ListaSelecaoObra({ title, onSelect }: Props) {
     useEffect(() => {
         const fetchWorks = async () => {
             try {
+                // Busca TODAS as obras da empresa, sem filtros de usuário
                 const response = await api.get(`/work/list/${ENTERPRISE_ID}`);
                 const data = response.data;
+                
                 let list: SessionItemProps[] = [];
                 
+                // Normalização dos dados (caso venha array direto ou objeto { works: [] })
                 if (Array.isArray(data)) list = data;
                 else if (data.works && Array.isArray(data.works)) list = data.works;
                 
+                // Seta todas as obras para exibição
                 setAllWorks(list);
                 setFilteredWorks(list);
             } catch (error) {
@@ -73,7 +77,7 @@ export function ListaSelecaoObra({ title, onSelect }: Props) {
                 </h1>
                 
                 <form onSubmit={handleSearch} className="flex flex-1 items-center justify-between mb-2 pb-6 border-b-[1px] border-b-gray-400 md:flex-row gap-2 mt-6">
-                   
+                    
                         <Input 
                             onChange={(e: any) => setSearchTerm(e.target.value)} 
                             placeholder="Pesquisar obra pelo nome..."
