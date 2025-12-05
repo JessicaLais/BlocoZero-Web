@@ -8,7 +8,11 @@ export function FinanceiroSelecao() {
         <div className="overflow-hidden">
             <ListaSelecaoObra 
                 title="Relatório das Obras"
-                onSelect={(id) => navigate(`/obra/${id}/financeiro`)}
+                
+                onSelect={(id) => {
+                    console.log("Navegando para obra:", id); // Teste
+                    navigate(`/obra/${id}/financeiro`);
+                }}
             />
         </div>
     );
