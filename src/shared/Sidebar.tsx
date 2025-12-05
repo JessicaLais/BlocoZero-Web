@@ -26,13 +26,12 @@ const sidebarLinks: SidebarLink[] = [
         icon: FaCalendarAlt,
         roles: ['tender'] 
     },
-    // --- ALTERAÇÃO AQUI: Estoque agora é um link direto ---
     {
         label: 'Estoque',
-        to: '/estoque', // Link direto para a listagem
+        to: '/estoque', 
         icon: FaBox,
         roles: ['tender'] 
-        // A propriedade 'children' foi removida
+        
     },
     {
         label: 'Relatórios',

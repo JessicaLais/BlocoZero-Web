@@ -27,31 +27,25 @@ function AppRoutes() {
         <Routes>
             <Route path="/" element={<AppLayout />}>
                 
-                {/* --- ROTAS DO MANAGER (Gestor) --- */}
                 {session?.userFunction === "manager" && (
                     <>
-                        {/* 1. Rotas Principais */}
                         <Route path="/cadastro-obra" element={<CadastroObra />} />
                         <Route path="/obras/:id" element={<GerenciarObra />} />
 
-                        {/* 2. Rotas Dinâmicas (Que esperam ID da Obra) */}
                         <Route path="/obra/:work_id/orcamento" element={<Orçamento />} />
                         <Route path="/obra/:work_id/financeiro" element={<Fin />} />
                         <Route path="/obra/:work_id/estoque" element={<EstoqueTab />} />
                         <Route path="/obra/:work_id/cronograma" element={<CronogramaPage />} />
 
-                        {/* 3. GAMBIARRA DE NAVEGAÇÃO (Sidebar Fixa -> Rota Dinâmica) */}
-                        {/* Isso faz os links da sua Sidebar atual funcionarem redirecionando para a Obra 1 */}
+                        
                         <Route path="/orcamento" element={<OrcamentoSelecao />} />
                         <Route path="/financeiro" element={<FinanceiroSelecao/>} />
                         <Route path="/tabela-estoque" element={<EstoqueSelecao />} />
                         <Route path="/cronograma-fisico" element={<CronogramaSelecao />} />
-                        {/* Rota Inicial do Manager */}
                         <Route path="/" element={<Navigate to="/cadastro-obra" />} />
                     </>
                 )}
 
-                {/* --- ROTAS DO TENDER (Encarregado) --- */}
                 {session?.userFunction === "tender" && (
                     <>
 
@@ -67,7 +61,6 @@ function AppRoutes() {
                      </>
                 )}
 
-                {/* Fallback para rota não encontrada */}
                 <Route path="*" element={<Navigate to="/" />} />
             </Route>
         </Routes>
