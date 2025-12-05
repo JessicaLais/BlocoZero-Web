@@ -6,12 +6,12 @@ import searchSvg from "../assets/search.svg";
 import { Button } from "../features/home/components/Button"; 
 import { Pagination } from "../features/home/components/Pagination"; 
 
-
 // --- INTERFACE DAS PROPS ---
 interface Props {
     title: string;
     onSelect: (workId: string) => void;
 }
+
 
 export function ListaSelecaoObra({ title, onSelect }: Props) {
     const ENTERPRISE_ID = 1;
@@ -64,7 +64,7 @@ export function ListaSelecaoObra({ title, onSelect }: Props) {
     }
 
     return (
-        <div className="flex justify-center p-6 overflow-hidden">
+        <div className="flex justify-center p-6 overflow-y-scroll max-h-[480px]">
             
             <main className="bg-white rounded-xl p-10 w-[768px] flex flex-col shadow-lg">
                 
@@ -72,7 +72,7 @@ export function ListaSelecaoObra({ title, onSelect }: Props) {
                     {title}
                 </h1>
                 
-                <form onSubmit={handleSearch} className="flex flex-1 items-center justify-between mb-4 pb-6 border-b-[1px] border-b-gray-400 md:flex-row gap-2 mt-6">
+                <form onSubmit={handleSearch} className="flex flex-1 items-center justify-between mb-2 pb-6 border-b-[1px] border-b-gray-400 md:flex-row gap-2 mt-6">
                    
                         <Input 
                             onChange={(e: any) => setSearchTerm(e.target.value)} 
@@ -84,7 +84,7 @@ export function ListaSelecaoObra({ title, onSelect }: Props) {
                     </Button>
                 </form>
 
-                <div className="my-6 flex flex-col gap-4 max-h-[282px] overflow-y-scroll">
+                <div className="my-4 flex flex-col gap-4 max-h-[282px] overflow-y-scroll">
                     {paginatedWorks.length > 0 ? (
                         paginatedWorks.map((work) => (
                             <div key={work.id_work} onClick={() => onSelect(work.id_work)}>

@@ -68,6 +68,7 @@ export function SignIn() {
                         required 
                         legend="E-mail" 
                         type="email" 
+                        className="text-gray-700"
                         placeholder="Seu@email.com" 
                     />
                     <InputAuth 
@@ -75,6 +76,7 @@ export function SignIn() {
                         required 
                         legend="Senha" 
                         type="password" 
+                        className="text-gray-700"
                         placeholder="Sua senha" 
                     />
 
