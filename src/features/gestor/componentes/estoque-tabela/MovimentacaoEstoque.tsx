@@ -37,7 +37,7 @@ export default function ResumoMovimentacao({ materiais }: ResumoMovimentacaoProp
   ];
 
   return (
-    <div className="flex gap-4 mb-6">
+    <div className="flex gap-4 mb-2">
       {cards.map((card, index) => (
         <div
           key={index}
