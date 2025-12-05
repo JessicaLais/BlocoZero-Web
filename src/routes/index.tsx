@@ -15,6 +15,9 @@ import { CronogramaPage } from "../pages/CronogramaFisico";
 
 import { Relatorios } from "../pages/Relatorios";
 
+import { RelatoriosDevolvidos } from "../pages/RelatoriosDevolvidos";
+
+
 function AppRoutes() {
     const { session } = useAuth();
 
@@ -40,6 +43,7 @@ function AppRoutes() {
                         <Route path="/estoque/:work_id" element={<EstoqueObra />} />
                         <Route path="/" element={<Navigate to="/work" />} />
                         <Route path="/relatorios" element={<Relatorios />} />
+                        <Route path="/relatorios-devolvidos" element={<RelatoriosDevolvidos />} />
                      </>
                 )}
 
