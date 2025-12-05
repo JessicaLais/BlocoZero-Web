@@ -13,9 +13,7 @@ interface StageOption {
 
 export function CronogramaPage() {
     const navigate = useNavigate();
-    const { work_id } = useParams<{ work_id: string }>(); // Pega o ID da URL
-    
-    // Converte para número ou usa 0 se falhar, mas idealmente deve redirecionar se não tiver ID
+    const { work_id } = useParams<{ work_id: string }>(); 
     const currentWorkId = Number(work_id);
 
     const [stats, setStats] = useState({ dentro: "0.00", adiantadas: "0.00", atrasadas: "0.00" });
@@ -23,17 +21,13 @@ export function CronogramaPage() {
     const [filterStageId, setFilterStageId] = useState("");
     const [workTitle, setWorkTitle] = useState("Carregando...");
 
-    // Busca dados iniciais da obra e etapas
     useEffect(() => {
         if (!currentWorkId) return;
 
         const fetchData = async () => {
             try {
-                // 1. Busca nome da obra
                 const resWork = await api.get(`/work/specific/${currentWorkId}`);
-                console.log("Dados da Obra recebidos:", resWork.data); // <--- CONFIRA NO CONSOLE
-
-                // Tenta pegar o título direto ou dentro de um objeto 'work'
+                console.log("Dados da Obra recebidos:", resWork.data); 
                 const workData = resWork.data.work || resWork.data;
                 
                 if (workData && workData.title) {
@@ -42,7 +36,6 @@ export function CronogramaPage() {
                     setWorkTitle("Obra sem título");
                 }
 
-                // 2. Busca etapas para o filtro
                 const response = await api.get(`/stage/list/${currentWorkId}`);
                 const data = response.data.stages || response.data || [];
                 
@@ -75,7 +68,7 @@ export function CronogramaPage() {
                     <span className="text-sm text-gray-500">Acompanhamento de etapas e prazos</span>
                 </div>
                 <Button 
-                    onClick={() => navigate('/cronograma-fisico')} // Volta para a lista
+                    onClick={() => navigate('/cronograma-fisico')} 
                     className="px-4 py-2 bg-gray-200 text-gray-700 hover:bg-gray-300 rounded text-sm"
                 >
                     Trocar Obra

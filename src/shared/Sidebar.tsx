@@ -22,7 +22,7 @@ const sidebarLinks: SidebarLink[] = [
     },
     {
         label: 'Cronograma',
-        to: '#', 
+        to: '/cronograma-fisico', 
         icon: FaCalendarAlt,
         roles: ['tender'] 
     },

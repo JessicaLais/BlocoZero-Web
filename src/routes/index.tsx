@@ -54,12 +54,16 @@ function AppRoutes() {
                 {/* --- ROTAS DO TENDER (Encarregado) --- */}
                 {session?.userFunction === "tender" && (
                     <>
+
+                        <Route path="/obra/:work_id/cronograma" element={<CronogramaPage />} />
+
                         <Route path="/work" element={<Home />} />
                         <Route path="/work/specific/:id" element={<CardObra />} />
                         <Route path="/estoque" element={<EstoqueList />} />
                         <Route path="/estoque/:work_id" element={<EstoqueObra />} />
                         <Route path="/" element={<Navigate to="/work" />} />
                         <Route path="/relatorios" element={<Relatorios />} />
+                        <Route path="/cronograma-fisico" element={<CronogramaSelecao />} />
                      </>
                 )}
 
