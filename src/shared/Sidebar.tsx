@@ -54,7 +54,7 @@ const sidebarLinks = [
     },
     {
         label: 'Orçamento',
-        to: '/orçamento', 
+        to: '/orcamento', 
         icon: images.Orçamento,
         roles: ['manager'] 
     },

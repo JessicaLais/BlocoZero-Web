@@ -8,6 +8,10 @@ import { Home } from "../pages/HomePage";
 import { CardObra } from "../pages/CardObra";
 import { EstoqueList } from "../pages/EstoqueList";
 import { EstoqueObra } from "../pages/Estoque";
+import { CronogramaSelecao } from "../features/gestor/componentes/cronograma/CronogramaList.tsx";
+import { OrcamentoSelecao } from "../features/gestor/componentes/orçamento/OrcamentoSelecao.tsx";
+import { EstoqueSelecao } from "../features/gestor/componentes/estoque-tabela/EstoqueSelecao.tsx";
+import { FinanceiroSelecao } from "../features/financeiro/FinanceiroSelecao.tsx";
 import { CadastroObra } from "../pages/CadastroObra";
 import { Orçamento } from "../pages/Orçamento";
 import { Fin } from "../pages/Financeiro";
@@ -15,12 +19,9 @@ import EstoqueTab from "../pages/EstoqueTabela";
 import { CronogramaPage } from "../pages/CronogramaFisico";
 import { GerenciarObra } from "../features/gestor/componentes/cadastroMateriais/GerenciarObra.tsx";
 import { Relatorios } from "../pages/Relatorios";
-import { CronogramaSelecao } from "../features/gestor/componentes/cronograma/CronogramaList.tsx";
 function AppRoutes() {
     const { session } = useAuth();
 
-    // Defina um ID padrão para testes quando clicar na Sidebar (ex: Obra 1)
-    const DEFAULT_WORK_ID = 1;
 
     return (
         <Routes>
@@ -41,11 +42,10 @@ function AppRoutes() {
 
                         {/* 3. GAMBIARRA DE NAVEGAÇÃO (Sidebar Fixa -> Rota Dinâmica) */}
                         {/* Isso faz os links da sua Sidebar atual funcionarem redirecionando para a Obra 1 */}
-                        <Route path="/orçamento" element={<Navigate to={`/obra/${DEFAULT_WORK_ID}/orcamento`} replace />} />
-                        <Route path="/financeiro" element={<Navigate to={`/obra/${DEFAULT_WORK_ID}/financeiro`} replace />} />
-                        <Route path="/tabela-estoque" element={<Navigate to={`/obra/${DEFAULT_WORK_ID}/estoque`} replace />} />
+                        <Route path="/orcamento" element={<OrcamentoSelecao />} />
+                        <Route path="/financeiro" element={<FinanceiroSelecao/>} />
+                        <Route path="/tabela-estoque" element={<EstoqueSelecao />} />
                         <Route path="/cronograma-fisico" element={<CronogramaSelecao />} />
-                        <Route path="/obra/:work_id/cronograma" element={<CronogramaPage />} />
                         {/* Rota Inicial do Manager */}
                         <Route path="/" element={<Navigate to="/cadastro-obra" />} />
                     </>
