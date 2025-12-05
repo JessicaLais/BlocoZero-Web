@@ -9,7 +9,7 @@ import incluirSvg from "../../../../assets/incluir.svg";
 import deletarSvg from "../../../../assets/deletar.svg";
 import { api } from "../../../../services/api";
 
-// Interface baseada na resposta da API
+// Interfaces
 interface StockData {
     id_stock: number;
     id_work: number;
@@ -22,12 +22,26 @@ interface StockData {
     weightLength: number;
     minQuantity: number;
     costUnit: number;
-    category?: { name: string };
+    // O backend pode mandar o objeto category aninhado, mas vamos garantir buscando a lista
+    category?: { name: string }; 
+}
+
+// Para o select e exibição
+interface CategoryOption {
+    id: number;
+    name: string;
+    id_type: number;
+}
+
+interface TypeData {
+    id: number;
+    name: string;
+    work_id: number;
 }
 
 const stockSchema = z.object({
     id_work: z.coerce.number().min(1, "ID da obra inválido"),
-    id_type: z.coerce.number(),
+    id_type: z.coerce.number(), // Será preenchido automaticamente ao escolher a categoria
     id_category: z.coerce.number().min(1, "Selecione a categoria"),
     code: z.string().min(1, "O código é obrigatório"),
     name: z.string().min(1, "O nome é obrigatório"),
@@ -38,17 +52,21 @@ const stockSchema = z.object({
     costUnit: z.coerce.number().min(0),
 });
 
-export function MateriaisPanel() {
-    const CURRENT_WORK_ID = 1; 
+interface Props {
+    workId: string;
+}
 
+export function MateriaisPanel({ workId }: Props) {
+    
     const [isVisible, setIsVisible] = useState(false);
     const [stocks, setStocks] = useState<StockData[]>([]);
+    const [categories, setCategories] = useState<CategoryOption[]>([]); // Lista de categorias para o select
     const [loading, setLoading] = useState(true);
     const [selectedId, setSelectedId] = useState<number | null>(null);
 
     const [formData, setFormData] = useState({
-        id_work: String(CURRENT_WORK_ID),
-        id_type: "1",
+        id_work: workId,
+        id_type: "1", // Vamos tentar deduzir isso da categoria
         id_category: "",
         code: "",
         name: "",
@@ -59,9 +77,45 @@ export function MateriaisPanel() {
         costUnit: "0.00",
     });
 
+    // 1. Busca Categorias (Lógica robusta igual a da aba Categorias)
+    const fetchCategoriesForWork = async () => {
+        try {
+            // Primeiro busca os Tipos da Obra
+            const resTypes = await api.get(`/type/list/${workId}`);
+            const types = resTypes.data.types || resTypes.data || [];
+            
+            if (!Array.isArray(types)) return;
+
+            let allCats: CategoryOption[] = [];
+            
+            // Itera pelos tipos para buscar as categorias de cada um
+            for (const type of types) {
+                try {
+                    // Verifica se o tipo é desta obra
+                    if (Number(type.work_id) === Number(workId)) {
+                        const resCat = await api.get(`/category/list/${type.id}`);
+                        const cats = resCat.data.categories || resCat.data || [];
+                        if (Array.isArray(cats)) {
+                            allCats = [...allCats, ...cats];
+                        }
+                    }
+                } catch (e) { /* ignora erro */ }
+            }
+            
+            // Remove duplicatas
+            const uniqueCats = Array.from(new Set(allCats.map(a => a.id)))
+                .map(id => allCats.find(a => a.id === id)!);
+
+            setCategories(uniqueCats);
+
+        } catch (error) {
+            console.error("Erro ao carregar categorias:", error);
+        }
+    };
+
     const fetchStocks = async () => {
         try {
-            const response = await api.get(`/stock/list/${CURRENT_WORK_ID}`);
+            const response = await api.get(`/stock/list/${workId}`);
             const data = response.data;
             if (data && data.stock) setStocks(data.stock);
             else if (Array.isArray(data)) setStocks(data);
@@ -75,12 +129,16 @@ export function MateriaisPanel() {
     };
 
     useEffect(() => {
-        fetchStocks();
-    }, []);
+        if (workId) {
+            setFormData(prev => ({ ...prev, id_work: workId }));
+            fetchStocks();
+            fetchCategoriesForWork(); // Carrega as categorias ao abrir
+        }
+    }, [workId]);
 
     const resetForm = () => {
         setFormData({
-            id_work: String(CURRENT_WORK_ID),
+            id_work: workId,
             id_type: "1",
             id_category: "",
             code: "",
@@ -91,6 +149,26 @@ export function MateriaisPanel() {
             minQuantity: "15",
             costUnit: "0.00",
         });
+    };
+
+    // Helper para exibir nome da categoria na tabela
+    const getCategoryName = (id: number) => {
+        const cat = categories.find(c => c.id === id);
+        return cat ? cat.name : `ID ${id}`; // Mostra nome se achar, senão ID
+    };
+
+    // Handler especial para o Select de Categoria
+    // Quando seleciona categoria, já tenta setar o id_type correto
+    const handleCategoryChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+        const catId = Number(e.target.value);
+        const selectedCat = categories.find(c => c.id === catId);
+        
+        setFormData(prev => ({
+            ...prev,
+            id_category: e.target.value,
+            // Se achou a categoria, usa o id_type dela. Senão mantém o atual.
+            id_type: selectedCat ? String(selectedCat.id_type) : prev.id_type
+        }));
     };
 
     const handleInputChange = (event: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
@@ -129,7 +207,7 @@ export function MateriaisPanel() {
         if (!window.confirm("Deseja remover este item do estoque?")) return;
         try {
             setLoading(true);
-            await api.delete(`/stock/delete/${selectedId}`); 
+            await api.delete(`/stock/delete/${selectedId}`);
             alert("Item removido com sucesso!");
             setSelectedId(null);
             setIsVisible(false);
@@ -148,7 +226,13 @@ export function MateriaisPanel() {
         try {
             setLoading(true);
             const data = stockSchema.parse(formData);
-            const payload = { ...data, category: data.id_category, id_category: data.id_category };
+            
+            // Backend espera 'category' ou 'id_category'? Mando ambos por garantia.
+            const payload = { 
+                ...data, 
+                category: data.id_category, 
+                id_category: data.id_category 
+            };
 
             if (selectedId) {
                 await api.put(`/stock/update/${selectedId}`, payload);
@@ -176,28 +260,31 @@ export function MateriaisPanel() {
             {isVisible && (
                 <div className="w-full space-y-2 py-2 px-4 bg-white rounded-lg shadow-md mb-4 border border-gray-200">
                     <div className="flex flex-row items-center gap-6">
-                        <InputForm 
-                            legend="Código:" name="code" value={formData.code} 
+                        <InputForm
+                            legend="Código:" name="code" value={formData.code}
                             onChange={handleInputChange} containerClassName="flex-1"
                         />
-                        <SelectForm 
-                            legend="Categoria:" name="id_category" value={formData.id_category} 
-                            onChange={handleInputChange} containerClassName="flex-1"
+                        
+                        {/* SELECT DE CATEGORIAS POPULADO DINAMICAMENTE */}
+                        <SelectForm
+                            legend="Categoria:" name="id_category" value={formData.id_category}
+                            onChange={handleCategoryChange} // Usamos o handler especial aqui
+                            containerClassName="flex-1"
                         >
                             <option value="">Selecione...</option>
-                            <option value="1">Estrutura (ID 1)</option>
-                            <option value="2">Acabamento (ID 2)</option>
+                            {categories.map(cat => (
+                                <option key={cat.id} value={cat.id}>{cat.name}</option>
+                            ))}
                         </SelectForm>
                     </div>
 
                     <div className="flex flex-row items-center gap-4">
-                        {/* 2. Campo Nome reduzido (w-1/3 em vez de flex-1) */}
-                        <InputForm 
-                            legend="Nome do material:" name="name" value={formData.name} 
-                            onChange={handleInputChange} containerClassName="w-1/3" 
+                        <InputForm
+                            legend="Nome do material:" name="name" value={formData.name}
+                            onChange={handleInputChange} containerClassName="w-1/3"
                         />
-                        <SelectForm 
-                            legend="Unidade:" name="unitMeasure" value={formData.unitMeasure} 
+                        <SelectForm
+                            legend="Unidade:" name="unitMeasure" value={formData.unitMeasure}
                             onChange={handleInputChange} containerClassName="w-1/6"
                         >
                             <option value="">...</option>
@@ -208,30 +295,28 @@ export function MateriaisPanel() {
                             <option value="un">un</option>
                         </SelectForm>
                         
-                        {/* 3. Campos Peso e Custo separados */}
-                        <InputForm 
-                            legend="Peso/Comp:" name="weightLength" value={formData.weightLength} 
-                            onChange={handleInputChange} type="number" containerClassName="flex-1" 
+                        <InputForm
+                            legend="Peso/Comp:" name="weightLength" value={formData.weightLength}
+                            onChange={handleInputChange} type="number" containerClassName="flex-1"
                         />
-                         <InputForm 
-                            legend="Custo Unit (R$):" name="costUnit" value={formData.costUnit} 
-                            onChange={handleInputChange} type="number" step="0.01" containerClassName="flex-1" 
+                         <InputForm
+                            legend="Custo Unit (R$):" name="costUnit" value={formData.costUnit}
+                            onChange={handleInputChange} type="number" step="0.01" containerClassName="flex-1"
                         />
                     </div>
 
                     <div className="flex flex-row items-center gap-10">
-                        <InputForm 
-                            legend="Qtd Inicial:" name="stockQuantity" value={formData.stockQuantity} 
+                        <InputForm
+                            legend="Qtd Inicial:" name="stockQuantity" value={formData.stockQuantity}
                             onChange={handleInputChange} type="number" containerClassName="w-1/3"
                         />
-                        <InputForm 
-                            legend="Estoque Mínimo:" name="minQuantity" value={formData.minQuantity} 
+                        <InputForm
+                            legend="Estoque Mínimo:" name="minQuantity" value={formData.minQuantity}
                             onChange={handleInputChange} type="number" containerClassName="w-1/3"
                         />
                     </div>
 
                     <div className="flex gap-2 mt-2 justify-end">
-                        {/* 1. Botão Confirmar agora CINZA (padrão do projeto) */}
                         <Button onClick={handleSubmit} className="px-4 py-1 text-sm bg-gray-350 hover:bg-gray-300  border border-gray-400 text-black">
                             {selectedId ? "Salvar Alterações" : "Confirmar"}
                         </Button>
@@ -255,7 +340,7 @@ export function MateriaisPanel() {
             </div>
 
             <table className="bg-white border-1 border-gray-500 w-full text-left mt-2 text-sm">
-                <thead> 
+                <thead>
                     <tr className="bg-gray-300">
                         <th className="px-1 border-1">Código</th>
                         <th className="px-1 border-1">Nome</th>
@@ -271,21 +356,26 @@ export function MateriaisPanel() {
                         <tr><td colSpan={7} className="text-center p-2 text-gray-500">Nenhum item encontrado.</td></tr>
                     )}
                     {stocks.map((item) => (
-                        <tr 
+                        <tr
                             key={item.id_stock}
                             onClick={() => setSelectedId(selectedId === item.id_stock ? null : item.id_stock)}
                             className={`cursor-pointer hover:bg-gray-50 ${selectedId === item.id_stock ? 'bg-blue-200' : ''}`}
-                        > 
+                        >
                             <td className="px-2 border-1">{item.code}</td>
                             <td className="px-2 border-1">{item.name}</td>
-                            <td className="px-2 border-1">{item.category?.name || `ID ${item.id_category}`}</td>
+                            
+                            {/* AQUI ESTÁ A MÁGICA: Mostra o nome real da categoria */}
+                            <td className="px-2 border-1">
+                                {item.category?.name || getCategoryName(item.id_category)}
+                            </td>
+                            
                             <td className="px-2 border-1">{item.unitMeasure}</td>
                             <td className="px-2 border-1">{item.stockQuantity}</td>
                             <td className="px-2 border-1">{item.minQuantity}</td>
                             <td className="px-2 border-1">
                                 {item.costUnit ? `R$ ${Number(item.costUnit).toFixed(2)}` : '-'}
                             </td>
-                        </tr> 
+                        </tr>
                     ))}
                 </tbody>
             </table>

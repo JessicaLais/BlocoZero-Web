@@ -48,7 +48,7 @@ const sidebarLinks = [
     },
     {
         label: 'Cronograma',
-        to: '#', 
+        to: '/cronograma-fisico', 
         icon: images.cronograma,
         roles: ['manager'] 
     },

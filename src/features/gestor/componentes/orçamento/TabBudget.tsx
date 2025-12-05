@@ -2,44 +2,45 @@ import { useEffect, useState } from "react";
 import { api } from "../../../../services/api";
 import searchIcon from "../../../../assets/search-icon.svg"; 
 
+// Interface atualizada com os campos solicitados
 interface BudgetData {
     id_budget: number;
     code: string;
     name: string;
-    unitMeasure: string;
-    weightLength: number | null;
-    id_type: number;
-    id_category: number;
-    id_stage: number;
+    // Valores Financeiros
+    cost: number;          // Custo Unitário (do material ou hora do funcionário)
+    total: number;         // Total calculado
+    // Quantitativos
+    quantityUsage: number; // Quantidade (para materiais)
+    hours: number;         // Horas trabalhadas
+    extraHours: number;    // Horas extras
+    // Detalhes
+    Userfunction: string;  // Função do usuário
+    // Objetos completos vindos do include do backend
+    type?: { name: string };
+    category?: { name: string };
+    stage?: { name: string };
 }
-
-interface GenericOption { id: number; name: string; }
 
 export function TabBudget() {
     const CURRENT_WORK_ID = 1;
 
     const [budgets, setBudgets] = useState<BudgetData[]>([]);
     const [loading, setLoading] = useState(true);
-    
     const [searchTerm, setSearchTerm] = useState("");
-
-    const [types, setTypes] = useState<GenericOption[]>([]);
-    const [categories, setCategories] = useState<GenericOption[]>([]);
-    const [stages, setStages] = useState<GenericOption[]>([]);
 
     useEffect(() => {
         const loadData = async () => {
             try {
                 setLoading(true);
 
-                const [resBudgets, resTypes, resCats, resStages] = await Promise.all([
-                    api.get(`/budget/list/${CURRENT_WORK_ID}`),
-                    api.get(`/type/list/${CURRENT_WORK_ID}`).catch(() => ({ data: { types: [] } })),
-                    api.get(`/category/list/1`).catch(() => ({ data: { categories: [] } })),
-                    api.get(`/stage/list/${CURRENT_WORK_ID}`).catch(() => ({ data: { stages: [] } }))
-                ]);
-
-                const budgetData = resBudgets.data;
+                // 1. ÚNICA CHAMADA À API (Conforme solicitado)
+                // O Backend deve estar fazendo o 'include' para trazer type, category e stage dentro do objeto
+                const response = await api.get(`/budget/list/${CURRENT_WORK_ID}`);
+                
+                const budgetData = response.data;
+                
+                // Tratamento para garantir que pegamos o array
                 if (budgetData && budgetData.budgets) {
                     setBudgets(budgetData.budgets);
                 } else if (Array.isArray(budgetData)) {
@@ -48,17 +49,9 @@ export function TabBudget() {
                     setBudgets([]);
                 }
 
-                const typeList = resTypes.data.types || resTypes.data || [];
-                setTypes(typeList.map((t: any) => ({ id: t.id_type || t.id, name: t.name })));
-
-                const catList = resCats.data.categories || [];
-                setCategories(catList.map((c: any) => ({ id: c.id_category || c.id, name: c.name })));
-
-                const stageList = resStages.data.stages || resStages.data || [];
-                setStages(stageList.map((s: any) => ({ id: s.id_stage || s.id, name: s.name })));
-
             } catch (error) {
-                console.error("Erro ao carregar dados do orçamento:", error);
+                console.error("Erro ao carregar dados do orçamento. O servidor está rodando?", error);
+                setBudgets([]); // Evita tela branca
             } finally {
                 setLoading(false);
             }
@@ -67,34 +60,28 @@ export function TabBudget() {
         loadData();
     }, []);
 
-    const getTypeName = (id: number) => types.find(t => t.id === id)?.name || '-';
-    const getCatName = (id: number) => categories.find(c => c.id === id)?.name || '-';
-    const getStageName = (id: number) => stages.find(s => s.id === id)?.name || '-';
-
+    // Filtro de Pesquisa
     const filteredBudgets = budgets.filter(item => 
         item.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
         item.code.toLowerCase().includes(searchTerm.toLowerCase())
     );
 
     if (loading) {
-        return (
-            <main className="p-5">
-                <p>Carregando dados do orçamento...</p>
-            </main>
-        );
+        return <main className="p-5"><p>Carregando dados do orçamento...</p></main>;
     }
 
     return (
         <main className="p-5">
             
+            {/* BARRA DE PESQUISA - Centralizada e Arredondada (Item 3) */}
             <div className="flex justify-center mb-4">
-                <div className="relative w-64">
+                <div className="relative w-64"> {/* Aumentei um pouco a largura para ficar mais elegante no centro */}
                     <input 
                         type="text" 
-                        placeholder="Pesquisar..." 
+                        placeholder="Pesquisar por nome ou código..." 
                         value={searchTerm}
                         onChange={(e) => setSearchTerm(e.target.value)}
-                        className="w-full pl-8 pr-4 py-1 rounded-full border border-gray-400 text-sm focus:outline-none focus:border-gray-600 bg-gray-50 "
+                        className="w-full pl-8 pr-4 py-1 rounded-full border border-gray-400 text-sm focus:outline-none focus:border-gray-600 bg-gray-50"
                     />
                     <img 
                         src={searchIcon} 
@@ -104,42 +91,67 @@ export function TabBudget() {
                 </div>
             </div>
 
-            <div className="w-full flex gap-10 overflow-y-scroll max-h-[310px] border-1 border-gray-400 bg-white rounded-lg">
-                <table className="bg-white shadow-lg w-full text-left">
-                    <thead>
-                        <tr className="bg-white border-b border-gray-200">
-                            <th className="px-2 py-2 border-r border-gray-200 font-semibold text-gray-700">Código</th>
-                            <th className="px-2 py-2 border-r border-gray-200 font-semibold text-gray-700">Nome</th>
-                            <th className="px-2 py-2 border-r border-gray-200 font-semibold text-gray-700">Tipo</th>
-                            <th className="px-2 py-2 border-r border-gray-200 font-semibold text-gray-700">Categoria</th>
-                            <th className="px-2 py-2 border-r border-gray-200 font-semibold text-gray-700">Etapa Destinada</th>
-                            <th className="px-2 py-2 border-r border-gray-200 font-semibold text-gray-700 text-center">Unidade</th>
-                            <th className="px-2 py-2 font-semibold text-gray-700 text-center">Massa/Comp</th>
-                        </tr>
-                    </thead>
-                    
-                    <tbody>
-                        {filteredBudgets.length === 0 ? (
-                            <tr>
-                                <td colSpan={7} className="text-center p-4 text-gray-500">Nenhum item encontrado.</td>
+            {/* TABELA */}
+            <div className="w-full overflow-y-scroll max-h-[310px] border border-gray-300 bg-white rounded-lg shadow-sm">
+                {/* overflow-x-auto para garantir que todas as colunas novas caibam */}
+                <div className="overflow-x-auto">
+                    <table className="w-full text-left text-sm whitespace-nowrap">
+                        <thead>
+                            <tr className="bg-gray-50 border-b border-gray-200">
+                                <th className="px-2 py-2 border-r border-gray-200 font-semibold text-gray-700">Código</th>
+                                <th className="px-2 py-2 border-r border-gray-200 font-semibold text-gray-700">Nome</th>
+                                <th className="px-2 py-2 border-r border-gray-200 font-semibold text-gray-700">Tipo</th>
+                                <th className="px-2 py-2 border-r border-gray-200 font-semibold text-gray-700">Categoria</th>
+                                <th className="px-2 py-2 border-r border-gray-200 font-semibold text-gray-700">Etapa</th>
+                                
+                                {/* Novas Colunas Solicitadas (Item 4) */}
+                                <th className="px-2 py-2 border-r border-gray-200 font-semibold text-gray-700">Função</th>
+                                <th className="px-2 py-2 border-r border-gray-200 font-semibold text-gray-700 text-center">Qtd.</th>
+                                <th className="px-2 py-2 border-r border-gray-200 font-semibold text-gray-700 text-center">Horas</th>
+                                <th className="px-2 py-2 border-r border-gray-200 font-semibold text-gray-700 text-center">H. Extras</th>
+                                <th className="px-2 py-2 border-r border-gray-200 font-semibold text-gray-700 text-right">Custo Unit.</th>
+                                <th className="px-3 py-3 font-semibold text-gray-700 text-right">Total</th>
                             </tr>
-                        ) : (
-                            filteredBudgets.map((item) => (
-                                <tr key={item.id_budget} className="border-b border-gray-200 hover:bg-gray-50"> 
-                                    <td className="px-2 py-1 border-r border-gray-200">{item.code}</td>
-                                    <td className="px-2 py-1 border-r border-gray-200">{item.name}</td>
-                                    <td className="px-2 py-1 border-r border-gray-200">{getTypeName(item.id_type)}</td>
-                                    <td className="px-2 py-1 border-r border-gray-200">{getCatName(item.id_category)}</td>
-                                    <td className="px-2 py-1 border-r border-gray-200">{getStageName(item.id_stage)}</td>
-                                    <td className="px-2 py-1 border-r border-gray-200 text-center">{item.unitMeasure}</td>
-                                    <td className="px-2 py-1 text-center">
-                                        {item.weightLength ? item.weightLength : '----'}
+                        </thead>
+                        
+                        <tbody>
+                            {filteredBudgets.length === 0 ? (
+                                <tr>
+                                    <td colSpan={11} className="text-center p-6 text-gray-500">
+                                        Nenhum item encontrado. 
+                                        <br/><span className="text-xs text-gray-400">(Verifique se o backend está rodando)</span>
                                     </td>
                                 </tr>
-                            ))
-                        )}
-                    </tbody>
-                </table>
+                            ) : (
+                                filteredBudgets.map((item) => (
+                                    <tr key={item.id_budget} className="border-b border-gray-200 hover:bg-blue-50 transition-colors"> 
+                                        <td className="px-3 py-2 border-r border-gray-200 text-xs font-mono text-gray-600">{item.code}</td>
+                                        <td className="px-3 py-2 border-r border-gray-200 font-medium text-gray-800">{item.name}</td>
+                                        
+                                        {/* Dados via Include do Backend */}
+                                        <td className="px-3 py-2 border-r border-gray-200 text-gray-600">{item.type?.name || '-'}</td>
+                                        <td className="px-3 py-2 border-r border-gray-200 text-gray-600">{item.category?.name || '-'}</td>
+                                        <td className="px-3 py-2 border-r border-gray-200 text-gray-600">{item.stage?.name || '-'}</td>
+                                        
+                                        {/* Colunas Novas */}
+                                        <td className="px-3 py-2 border-r border-gray-200 text-gray-600">{item.Userfunction || '-'}</td>
+                                        <td className="px-3 py-2 border-r border-gray-200 text-center">{item.quantityUsage > 0 ? item.quantityUsage : '-'}</td>
+                                        <td className="px-3 py-2 border-r border-gray-200 text-center">{item.hours > 0 ? item.hours : '-'}</td>
+                                        <td className="px-3 py-2 border-r border-gray-200 text-center">{item.extraHours > 0 ? item.extraHours : '-'}</td>
+                                        
+                                        <td className="px-3 py-2 border-r border-gray-200 text-right text-gray-700">
+                                            {Number(item.cost).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
+                                        </td>
+                                        
+                                        <td className="px-3 py-2 text-right font-bold text-gray-800 bg-gray-50">
+                                            {Number(item.total).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
+                                        </td>
+                                    </tr>
+                                ))
+                            )}
+                        </tbody>
+                    </table>
+                </div>
             </div>
         </main>
     );
