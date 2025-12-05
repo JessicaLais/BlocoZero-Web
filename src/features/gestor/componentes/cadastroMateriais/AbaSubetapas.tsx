@@ -1,6 +1,5 @@
 import { useEffect, useState } from "react";
 import { z, ZodError } from "zod";
-import { AxiosError } from "axios";
 import { InputForm } from "../InputForm";
 import { SelectForm } from "../SelectForm";
 import { Button } from "../../../auth/components/Button";
@@ -10,10 +9,10 @@ import deletarSvg from "../../../../assets/deletar.svg";
 import { api } from "../../../../services/api";
 
 interface SubetapasPanelProps {
+    workId: string; 
     selectedStage: { id: number, name: string } | null;
 }
 
-// --- INTERFACES ---
 interface SubstageData {
     id_substage: number;
     stage_id: number;
@@ -22,7 +21,6 @@ interface SubstageData {
     exp_duration?: string;
     progress: number;
     
-    // Lista de Funcionários
     substageEmployes?: {
         userId: number;
         hours: number;
@@ -30,7 +28,6 @@ interface SubstageData {
         user?: { name: string }; 
     }[];
 
-    // Lista de Materiais
     substageStocks?: {
         materialStockId: number;
         quantityUsed: number;
@@ -61,7 +58,8 @@ const substageSchema = z.object({
     progress: z.coerce.number().min(0).max(100).optional(),
 });
 
-export function SubetapasPanel({ selectedStage }: SubetapasPanelProps) {
+export function SubetapasPanel({ workId, selectedStage }: SubetapasPanelProps) {
+    
     if (!selectedStage) {
         return (
             <div className="h-[200px] flex flex-col items-center justify-center bg-gray-50 border border-gray-300 rounded text-gray-500">
@@ -71,9 +69,6 @@ export function SubetapasPanel({ selectedStage }: SubetapasPanelProps) {
         );
     }
 
-    const CURRENT_WORK_ID = 1;
-
-    // Estados
     const [isVisible, setIsVisible] = useState(false);
     const [substages, setSubstages] = useState<SubstageData[]>([]);
     const [selectedId, setSelectedId] = useState<number | null>(null);
@@ -89,61 +84,49 @@ export function SubetapasPanel({ selectedStage }: SubetapasPanelProps) {
     const [addEmp, setAddEmp] = useState({ user_id: "", hours: "", func: "" });
     const [addMat, setAddMat] = useState({ item_id: "", qtd: "" });
 
-    // --- Buscas ---
     const fetchResources = async () => {
         try {
-            const resEmp = await api.get(`/user/list/${CURRENT_WORK_ID}`);
+            const resEmp = await api.get(`/user/list/${1}`); 
             const rawEmp = resEmp.data;
             let empList: EmployeeOption[] = [];
             if (Array.isArray(rawEmp)) empList = rawEmp;
             else if (rawEmp.users && Array.isArray(rawEmp.users)) empList = rawEmp.users;
+            
             setAvailableEmployees(empList);
 
-            const resStock = await api.get(`/stock/${CURRENT_WORK_ID}`);
+            const resStock = await api.get(`/stock/list/${workId}`);
             const rawStock = resStock.data;
             let stockList: StockOption[] = [];
             if (Array.isArray(rawStock)) stockList = rawStock;
             else if (rawStock.stock && Array.isArray(rawStock.stock)) stockList = rawStock.stock;
-            else if (rawStock.stock_items && Array.isArray(rawStock.stock_items)) stockList = rawStock.stock_items;
+            
             setAvailableStock(stockList);
         } catch (error) {
             console.warn("Erro recursos", error);
-            setAvailableEmployees([]); setAvailableStock([]);
+            setAvailableEmployees([]); 
+            setAvailableStock([]);
         }
     };
 
-    // --- AQUI ESTÁ A CORREÇÃO PRINCIPAL ---
     const fetchSubstages = async () => {
+        if (!selectedStage) return;
         try {
-            // O Backend mudou: Agora ele espera o ID da OBRA, não da Etapa.
-            // E ele retorna um array de arrays (todas as subetapas de todas as etapas).
-            const response = await api.get(`/substage/list/${CURRENT_WORK_ID}`);
+            const response = await api.get(`/substage/list/${workId}`);
             const data = response.data;
             
             let allSubstages: any[] = [];
 
-            // Achatar o array (flat) para ter uma lista única
             if (data && data.subStages) {
                 allSubstages = data.subStages.flat();
             } else if (Array.isArray(data)) {
                 allSubstages = data.flat();
             }
 
-            // FILTRAR: Mostra apenas as subetapas que pertencem à Etapa Selecionada
             const filteredList = allSubstages.filter((item: any) => {
-                // O dado pode vir aninhado em 'substage' ou direto
-                // Precisamos verificar o stageId (que fica na tabela de relação ou no objeto substage se tiver include)
-                
-                // Opção 1: Item é a relação StageSubstage (tem stageId na raiz)
-                if (item.stageId && Number(item.stageId) === Number(selectedStage.id)) return true;
-                
-                // Opção 2: Item tem o objeto substage dentro
-                if (item.substage && item.stageId && Number(item.stageId) === Number(selectedStage.id)) return true;
-
-                return false;
+                const sId = item.stageId || (item.substage && item.substage.stageId);
+                return Number(sId) === Number(selectedStage.id);
             });
 
-            // Limpar a estrutura (tirar do aninhamento)
             const listaLimpa = filteredList.map((item: any) => item.substage ? item.substage : item);
             
             setSubstages(listaLimpa);
@@ -154,7 +137,7 @@ export function SubetapasPanel({ selectedStage }: SubetapasPanelProps) {
     };
 
     useEffect(() => {
-        if (selectedStage) {
+        if (selectedStage && workId) {
             fetchResources();
             fetchSubstages();
             setIsVisible(false);
@@ -163,9 +146,8 @@ export function SubetapasPanel({ selectedStage }: SubetapasPanelProps) {
             setTempEmployees([]);
             setTempMaterials([]);
         }
-    }, [selectedStage]);
+    }, [selectedStage, workId]);
 
-    // --- Helpers de Exibição ---
     const getEmployeeName = (emp: any) => {
         if (emp.user && emp.user.name) return emp.user.name;
         const found = availableEmployees.find(u => u.id_user === emp.userId);
@@ -180,7 +162,6 @@ export function SubetapasPanel({ selectedStage }: SubetapasPanelProps) {
         return found ? `${found.name} (${found.unitMeasure})` : `ID: ${stock.materialStockId}`;
     };
 
-    // --- Handlers de Adição ---
     const handleAddEmployee = () => {
         if (!addEmp.user_id || !addEmp.hours || !addEmp.func) return false;
         const user = availableEmployees.find(u => u.id_user === Number(addEmp.user_id));
@@ -226,15 +207,17 @@ export function SubetapasPanel({ selectedStage }: SubetapasPanelProps) {
                 expDuration: formData.expDuration,
                 progress: formData.progress
             });
-            const isoDate = new Date(data.expDuration).toISOString();
+            
+            const formattedDate = new Date(data.expDuration).toISOString(); 
 
             const payload = {
-                // Adicionado id_work por segurança, embora o backend atual use o stage_id
-                id_work: CURRENT_WORK_ID, 
+                id_work: Number(workId), 
                 stage_id: Number(selectedStage.id),
                 name: data.name,
-                expDuration: isoDate,
+                expDuration: formattedDate,
+                
                 progress: selectedId ? Number(data.progress) : 0,
+                
                 employees: tempEmployees.map(e => ({
                     user_id: Number(e.user_id),
                     hours_worked: Number(e.hours_worked),
@@ -245,6 +228,8 @@ export function SubetapasPanel({ selectedStage }: SubetapasPanelProps) {
                     quantity_usage: Number(m.quantity_usage)
                 }))
             };
+
+            console.log("Enviando Subetapa:", payload);
 
             if (selectedId) {
                 await api.put(`/substage/update/${selectedId}`, payload);
@@ -264,13 +249,17 @@ export function SubetapasPanel({ selectedStage }: SubetapasPanelProps) {
         } catch (error) {
             console.error(error);
             if (error instanceof ZodError) alert(error.issues[0].message);
-            else if (error instanceof AxiosError) alert(error.response?.data?.error || "Erro na API");
-            else alert("Erro desconhecido");
+            // @ts-ignore
+            else if (error.response?.data?.error) alert(error.response.data.error);
+            // @ts-ignore
+            else if (error.response?.data?.message) alert(error.response.data.message);
+            else alert("Erro ao salvar subetapa.");
         } finally {
             setLoading(false);
         }
     };
 
+    
     const handleEditClick = () => {
         if (!selectedId) return;
         const item = substages.find(s => s.id_substage === selectedId);
@@ -278,9 +267,10 @@ export function SubetapasPanel({ selectedStage }: SubetapasPanelProps) {
             const rawDate = item.expDuration || item.exp_duration;
             setFormData({
                 name: item.name,
-                expDuration: rawDate ? rawDate.split('T')[0] : '',
+                expDuration: rawDate ? String(rawDate).split('T')[0] : '',
                 progress: String(item.progress || 0)
             });
+
             setTempEmployees([]); 
             setTempMaterials([]);
             setIsVisible(true);
@@ -302,7 +292,7 @@ export function SubetapasPanel({ selectedStage }: SubetapasPanelProps) {
 
     return (
         <div className="overflow-y-scroll h-[350px] pb-4">
-            <div className="flex justify-between items-center mb-2 px-1">
+             <div className="flex justify-between items-center mb-2 px-1">
                 <h3 className="text-sm font-bold text-gray-700">
                     Etapa: <span className="text-blue-600 uppercase">{selectedStage.name}</span>
                 </h3>
@@ -310,17 +300,14 @@ export function SubetapasPanel({ selectedStage }: SubetapasPanelProps) {
 
             {isVisible && (
                 <div className="w-full py-2 px-4 bg-white rounded-lg shadow-md mb-2 border border-gray-200 text-sm">
-                    <h4 className="font-bold text-gray-600 mb-2 border-b pb-1">
-                        {selectedId ? "Editar Subetapa" : "Nova Subetapa"}
-                    </h4>
-                    
+                    {/* ... campos ... */}
                     <div className="flex gap-4 mb-3">
                         <InputForm legend="Nome Subetapa:" name="name" value={formData.name} onChange={handleInputChange} containerClassName="w-1/2" />
                         <InputForm legend="Previsão Fim:" type="date" name="expDuration" value={formData.expDuration} onChange={handleInputChange} containerClassName="w-1/6" />
                         {selectedId && <InputForm legend="Progresso (%):" type="number" name="progress" value={formData.progress} onChange={handleInputChange} containerClassName="w-1/6" />}
                     </div>
-
-                    {!selectedId ? (
+                    
+                    {!selectedId && (
                         <>
                             <div className="mb-3 bg-gray-50 p-2 rounded border border-gray-200">
                                 <h5 className="font-semibold text-xs text-gray-500 mb-1">Alocar Mão de Obra</h5>
@@ -342,6 +329,7 @@ export function SubetapasPanel({ selectedStage }: SubetapasPanelProps) {
                                 </div>
                             </div>
 
+                            {/* Alocar Materiais */}
                             <div className="mb-3 bg-gray-50 p-2 rounded border border-gray-200">
                                 <h5 className="font-semibold text-xs text-gray-500 mb-1">Alocar Materiais</h5>
                                 <div className="flex gap-2 items-end">
@@ -352,7 +340,7 @@ export function SubetapasPanel({ selectedStage }: SubetapasPanelProps) {
                                             return <option key={id} value={id}>{s.name} ({s.unitMeasure})</option>;
                                         })}
                                     </SelectForm>
-                                    <InputForm legend="Qtd:" type="number" value={addMat.qtd} onChange={e => setAddMat({...addMat, qtd: e.target.value})} containerClassName="w-24" />
+                                    <InputForm legend="Qtd:" type="number" value={addMat.qtd} onChange={e => setAddMat({...addMat, qtd: e.target.value})} containerClassName="w-1/4" />
                                     <button type="button" onClick={handleAddMaterial} className="bg-green-500 text-white px-3 py-1 rounded text-xs h-[28px] mb-[2px] font-bold">+</button>
                                 </div>
                                 <div className="mt-1 flex flex-wrap gap-1">
@@ -364,23 +352,20 @@ export function SubetapasPanel({ selectedStage }: SubetapasPanelProps) {
                                 </div>
                             </div>
                         </>
-                    ) : (
-                        <div className="mb-3 p-2 bg-yellow-50 text-yellow-700 text-xs rounded border border-yellow-200">
-                            Nota: Para alterar a equipe ou materiais, exclua e recrie a subetapa.
-                        </div>
                     )}
 
                     <div className="flex gap-2 mt-2 justify-end">
-                        <Button onClick={handleSubmit} className="px-4 py-1 text-sm bg-blue-600 text-white hover:bg-blue-700 rounded border border-blue-800">
-                            {loading ? "Salvando..." : selectedId ? "Salvar Alterações" : "Confirmar Cadastro"}
+                        <Button onClick={handleSubmit} className="px-4 py-1 text-sm bg-gray-350 hover:bg-gray-300 border border-gray-400 text-black">
+                            {loading ? "Salvando..." : selectedId ? "Salvar Alterações" : "Confirmar"}
                         </Button>
-                        <Button onClick={() => setIsVisible(false)} className="px-4 py-1 text-sm bg-red-200 text-red-800 hover:bg-red-300 rounded border border-gray-400">
+                        <Button onClick={() => setIsVisible(false)} className="px-4 py-1 text-sm bg-red-200 text-red-800 hover:bg-red-300 border border-gray-400">
                             Cancelar
                         </Button>
                     </div>
                 </div>
             )}
 
+            {/* Botoes de Ação */}
             <div className="flex justify-end mt-2 gap-2">
                 <Button onClick={() => { setIsVisible(true); setSelectedId(null); setFormData({name:"", expDuration:"", progress: "0"}); setTempEmployees([]); setTempMaterials([]); }} className="flex gap-2 px-3 py-1 text-sm bg-gray-350 border border-gray-400 hover:bg-gray-300">
                     <img src={incluirSvg} className="w-4 h-4" /> Incluir
@@ -393,6 +378,7 @@ export function SubetapasPanel({ selectedStage }: SubetapasPanelProps) {
                 </Button>
             </div>
 
+            {/* Tabela */}
             <table className="bg-white border border-gray-300 w-full text-left mt-2 text-sm">
                 <thead>
                     <tr className="bg-gray-300">
@@ -404,45 +390,48 @@ export function SubetapasPanel({ selectedStage }: SubetapasPanelProps) {
                     </tr>
                 </thead>
                 <tbody>
-                    {substages.length === 0 ? <tr><td colSpan={5} className="p-2 text-center text-gray-500">Nenhuma subetapa cadastrada.</td></tr> :
-                    substages.map((item, index) => {
-                        const uniqueKey = item.id_substage || index;
-                        const rawDate = item.expDuration || item.exp_duration;
-                        const dataFim = rawDate ? new Date(rawDate).toLocaleDateString() : "-";
+                    {substages.length === 0 ? (
+                        <tr><td colSpan={5} className="p-2 text-center text-gray-500">Nenhuma subetapa cadastrada.</td></tr>
+                    ) : (
+                        substages.map((item, index) => {
+                            const uniqueKey = item.id_substage || index;
+                            const rawDate = item.expDuration || item.exp_duration;
+                            const dataFim = rawDate ? new Date(rawDate).toLocaleDateString() : "-";
 
-                        return (
-                            <tr key={uniqueKey} onClick={() => setSelectedId(selectedId === item.id_substage ? null : item.id_substage)} className={`cursor-pointer hover:bg-gray-50 ${selectedId === item.id_substage ? 'bg-blue-200' : ''}`}>
-                                <td className="px-1 border-1 align-bottom">{item.name || "Sem nome"}</td>
-                                
-                                <td className="px-1 border-1 text-xs align-middle">
-                                    {item.substageEmployes && item.substageEmployes.length > 0 ? (
-                                        <div className="flex flex-col gap-1 m-1">
-                                            {item.substageEmployes.map((emp, idx) => (
-                                                <span key={idx} className="bg-white border border-gray-300 px-1 rounded shadow-sm block">
-                                                    <strong>{getEmployeeName(emp)}</strong> ({emp.hours}h)
-                                                </span>
-                                            ))}
-                                        </div>
-                                    ) : "-"}
-                                </td>
+                            return (
+                                <tr key={uniqueKey} onClick={() => setSelectedId(selectedId === item.id_substage ? null : item.id_substage)} className={`cursor-pointer hover:bg-gray-50 ${selectedId === item.id_substage ? 'bg-blue-200' : ''}`}>
+                                    <td className="px-1 border-1 align-bottom">{item.name || "Sem nome"}</td>
+                                    
+                                    <td className="px-1 border-1 text-xs align-middle">
+                                        {item.substageEmployes && item.substageEmployes.length > 0 ? (
+                                            <div className="flex flex-col gap-1 m-1">
+                                                {item.substageEmployes.map((emp, idx) => (
+                                                    <span key={idx} className="bg-white border border-gray-300 px-1 rounded shadow-sm block">
+                                                        <strong>{getEmployeeName(emp)}</strong> ({emp.hours}h)
+                                                    </span>
+                                                ))}
+                                            </div>
+                                        ) : "-"}
+                                    </td>
 
-                                <td className="px-1 border-1 text-xs align-middle">
-                                    {item.substageStocks && item.substageStocks.length > 0 ? (
-                                        <div className="flex flex-col gap-1 m-1">
-                                            {item.substageStocks.map((stock, idx) => (
-                                                <span key={idx} className="bg-white border border-gray-300 px-1 rounded shadow-sm block">
-                                                    {getMaterialName(stock)}: {stock.quantityUsed}
-                                                </span>
-                                            ))}
-                                        </div>
-                                    ) : "-"}
-                                </td>
+                                    <td className="px-1 border-1 text-xs align-middle">
+                                        {item.substageStocks && item.substageStocks.length > 0 ? (
+                                            <div className="flex flex-col gap-1 m-1">
+                                                {item.substageStocks.map((stock, idx) => (
+                                                    <span key={idx} className="bg-white border border-gray-300 px-1 rounded shadow-sm block">
+                                                        {getMaterialName(stock)}: {stock.quantityUsed}
+                                                    </span>
+                                                ))}
+                                            </div>
+                                        ) : "-"}
+                                    </td>
 
-                                <td className="px-1 border-1 align-bottom">{dataFim}</td>
-                                <td className="px-1 border-1 align-bottom">{item.progress || 0}%</td>
-                            </tr>
-                        );
-                    })}
+                                    <td className="px-1 border-1 align-bottom">{dataFim}</td>
+                                    <td className="px-1 border-1 align-bottom">{item.progress || 0}%</td>
+                                </tr>
+                            );
+                        })
+                    )}
                 </tbody>
             </table>
         </div>

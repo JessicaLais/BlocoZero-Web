@@ -42,7 +42,7 @@ export function GanttStatsCards({ stats }: GanttStatsCardsProps) {
   ];
 
   return (
-    <div className="flex flex-wrap gap-6 mb-6 justify-center pt-10">
+    <div className="flex flex-wrap gap-6 mb-6 justify-center pt-6">
       {cards.map((card) => (
         <div
           key={card.label}
