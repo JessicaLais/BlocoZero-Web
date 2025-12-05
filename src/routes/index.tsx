@@ -14,9 +14,8 @@ import { Fin } from "../pages/Financeiro";
 import EstoqueTab from "../pages/EstoqueTabela";
 import { CronogramaPage } from "../pages/CronogramaFisico";
 import { GerenciarObra } from "../features/gestor/componentes/cadastroMateriais/GerenciarObra.tsx";
-
 import { Relatorios } from "../pages/Relatorios";
-
+import { CronogramaSelecao } from "../features/gestor/componentes/cronograma/CronogramaList.tsx";
 function AppRoutes() {
     const { session } = useAuth();
 
@@ -45,8 +44,8 @@ function AppRoutes() {
                         <Route path="/orçamento" element={<Navigate to={`/obra/${DEFAULT_WORK_ID}/orcamento`} replace />} />
                         <Route path="/financeiro" element={<Navigate to={`/obra/${DEFAULT_WORK_ID}/financeiro`} replace />} />
                         <Route path="/tabela-estoque" element={<Navigate to={`/obra/${DEFAULT_WORK_ID}/estoque`} replace />} />
-                        <Route path="/cronograma-fisico" element={<Navigate to={`/obra/${DEFAULT_WORK_ID}/cronograma`} replace />} />
-
+                        <Route path="/cronograma-fisico" element={<CronogramaSelecao />} />
+                        <Route path="/obra/:work_id/cronograma" element={<CronogramaPage />} />
                         {/* Rota Inicial do Manager */}
                         <Route path="/" element={<Navigate to="/cadastro-obra" />} />
                     </>

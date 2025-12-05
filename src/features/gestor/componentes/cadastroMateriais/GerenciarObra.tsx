@@ -1,10 +1,10 @@
 // features/gestor/pages/GerenciarObra.tsx
 import { useParams, useNavigate } from "react-router-dom";
 import { AbasCadastroObra } from "./AbasCadastroObra";
-import { Button } from "../../../home/components/Button"; // Ajuste o import do seu botão
+import { Button } from "../../../home/components/Button"; 
 
 export function GerenciarObra() {
-    const { id } = useParams<{ id: string }>(); // Pega o ID da URL
+    const { id } = useParams<{ id: string }>(); 
     const navigate = useNavigate();
 
     if (!id) {
@@ -13,7 +13,6 @@ export function GerenciarObra() {
 
     return (
         <div className="flex flex-col h-screen bg-gray-50 overflow-hidden">
-            {/* Cabeçalho Simples com Voltar */}
             <div className="bg-white border-b border-gray-300 p-4 flex items-center justify-between">
                 <div>
                     <h1 className="text-xl font-bold text-gray-800">Gerenciando Obra #{id}</h1>
@@ -28,8 +27,7 @@ export function GerenciarObra() {
                 </Button>
             </div>
 
-            {/* Conteúdo das Abas */}
-            <div className="flex-1 overflow-hidden">
+            <div className="flex-1 overflow-hidden bg-white">
                 <AbasCadastroObra workId={id} />
             </div>
         </div>
