@@ -19,6 +19,8 @@ import EstoqueTab from "../pages/EstoqueTabela";
 import { CronogramaPage } from "../pages/CronogramaFisico";
 import { GerenciarObra } from "../features/gestor/componentes/cadastroMateriais/GerenciarObra.tsx";
 import { Relatorios } from "../pages/Relatorios";
+import {RelatoriosGestorPage} from "../pages/VisuRelatorios.tsx";
+
 function AppRoutes() {
     const { session } = useAuth();
 
@@ -36,6 +38,7 @@ function AppRoutes() {
                         <Route path="/obra/:work_id/financeiro" element={<Fin />} />
                         <Route path="/obra/:work_id/estoque" element={<EstoqueTab />} />
                         <Route path="/obra/:work_id/cronograma" element={<CronogramaPage />} />
+                        <Route path="/obra/:work_id/relatorios-gestor" element={<RelatoriosGestorPage />} />
 
                         
                         <Route path="/orcamento" element={<OrcamentoSelecao />} />
