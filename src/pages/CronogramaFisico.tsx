@@ -1,8 +1,10 @@
 import { useEffect, useState } from "react";
+import { useParams, useNavigate } from "react-router-dom"; // Importar hooks de rota
 import { GanttStatsCards } from "../features/gestor/componentes/cronograma/GanttStatsCards";
 import { CronogramaTable } from "../features/gestor/componentes/cronograma/CronogramaTable";
 import { CronogramaToolbar } from "../features/gestor/componentes/cronograma/CronogramaToolbar";
 import { api } from "../services/api";
+import { Button } from "../features/home/components/Button";
 
 interface StageOption {
     id: number;
@@ -10,56 +12,90 @@ interface StageOption {
 }
 
 export function CronogramaPage() {
-  const id_work = 1; 
-  const [stats, setStats] = useState({ dentro: "0.00", adiantadas: "0.00", atrasadas: "0.00" });
-  
-  // Estado para o filtro
-  const [stageOptions, setStageOptions] = useState<StageOption[]>([]);
-  const [filterStageId, setFilterStageId] = useState("");
+    const navigate = useNavigate();
+    const { work_id } = useParams<{ work_id: string }>(); // Pega o ID da URL
+    
+    // Converte para número ou usa 0 se falhar, mas idealmente deve redirecionar se não tiver ID
+    const currentWorkId = Number(work_id);
 
-  // BUSCA DINÂMICA DAS ETAPAS PARA O FILTRO
-  useEffect(() => {
-      const fetchStages = async () => {
-          try {
-              // Chama a API de listagem de etapas
-              const response = await api.get(`/stage/list/${id_work}`);
-              const data = response.data.stages || response.data || [];
-              
-              // Mapeia para o formato do select
-              const options = data.map((s: any) => ({
-                  id: s.id_stage,
-                  name: s.name
-              }));
-              setStageOptions(options);
-          } catch (error) {
-              console.error("Erro ao carregar filtro de etapas:", error);
-          }
-      };
-      fetchStages();
-  }, []);
+    const [stats, setStats] = useState({ dentro: "0.00", adiantadas: "0.00", atrasadas: "0.00" });
+    const [stageOptions, setStageOptions] = useState<StageOption[]>([]);
+    const [filterStageId, setFilterStageId] = useState("");
+    const [workTitle, setWorkTitle] = useState("Carregando...");
 
-  const handleFilterChange = (val: string) => {
-      setFilterStageId(val);
-  };
+    // Busca dados iniciais da obra e etapas
+    useEffect(() => {
+        if (!currentWorkId) return;
 
-  return (
-    <div className="flex flex-col h-full bg-white p-2 overflow-y-auto">
-      
-      <GanttStatsCards stats={stats} />
+        const fetchData = async () => {
+            try {
+                // 1. Busca nome da obra
+                const resWork = await api.get(`/work/specific/${currentWorkId}`);
+                console.log("Dados da Obra recebidos:", resWork.data); // <--- CONFIRA NO CONSOLE
 
-      {/* O Toolbar recebe a lista dinâmica 'stageOptions' */}
-      <CronogramaToolbar 
-          stages={stageOptions} 
-          onFilterChange={handleFilterChange}
-      />
+                // Tenta pegar o título direto ou dentro de um objeto 'work'
+                const workData = resWork.data.work || resWork.data;
+                
+                if (workData && workData.title) {
+                    setWorkTitle(workData.title);
+                } else {
+                    setWorkTitle("Obra sem título");
+                }
 
-      <div className="bg-white rounded-lg shadow-sm border border-gray-300 overflow-hidden">
-        <CronogramaTable 
-            id_work={id_work} 
-            onChangeStats={setStats} 
-            filterStageId={filterStageId} 
-        />
-      </div>
-    </div>
-  );
+                // 2. Busca etapas para o filtro
+                const response = await api.get(`/stage/list/${currentWorkId}`);
+                const data = response.data.stages || response.data || [];
+                
+                const options = data.map((s: any) => ({
+                    id: s.id_stage,
+                    name: s.name
+                }));
+                setStageOptions(options);
+            } catch (error) {
+                console.error("Erro ao carregar dados:", error);
+                setWorkTitle("Erro ao carregar");
+            }
+        };
+        fetchData();
+    }, [currentWorkId]);
+
+    const handleFilterChange = (val: string) => {
+        setFilterStageId(val);
+    };
+
+    if (!currentWorkId) {
+        return <div className="p-6">ID da obra não identificado.</div>;
+    }
+
+    return (
+        <div className="flex flex-col h-full bg-white p-4 overflow-y-auto">
+            <div className="flex justify-between items-center">
+                <div>
+                    <h1 className="text-xl font-bold text-gray-800">Cronograma: {workTitle}</h1>
+                    <span className="text-sm text-gray-500">Acompanhamento de etapas e prazos</span>
+                </div>
+                <Button 
+                    onClick={() => navigate('/cronograma-fisico')} // Volta para a lista
+                    className="px-4 py-2 bg-gray-200 text-gray-700 hover:bg-gray-300 rounded text-sm"
+                >
+                    Trocar Obra
+                </Button>
+            </div>
+            
+            <GanttStatsCards stats={stats} />
+
+            <CronogramaToolbar 
+                stages={stageOptions} 
+                onFilterChange={handleFilterChange}
+            />
+
+            <div className="bg-white rounded-lg shadow-sm border border-gray-300 overflow-hidden mt-4">
+                <CronogramaTable 
+                    id_work={currentWorkId} 
+                    onChangeStats={setStats} 
+                    filterStageId={filterStageId} 
+                />
+            </div>
+        </div>
+    );
 }
