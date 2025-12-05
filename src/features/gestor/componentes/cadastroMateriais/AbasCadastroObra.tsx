@@ -2,13 +2,17 @@ import { useState } from "react";
 import { Tabs, TabList, Tab, TabPanels, TabPanel } from "./Tabs";
 import { MateriaisPanel } from "./AbaMateriais";
 import { FuncionariosPanel } from "./AbaFuncionarios";
-import { CronogramaPanel } from "./AbaEtapa"; // Mantive seu nome de arquivo original
+import { EtapaPanel } from "./AbaEtapa"; // Mantive seu nome de arquivo original
 import { SubetapasPanel } from "./AbaSubetapas";
 // --- Novos imports vindos do Git Pull ---
 import { TiposPanel } from "./AbaTipo"; 
 import { CategoriasPanel } from "./AbaCategoria";
 
-export function AbasCadastroObra() {
+
+interface Props {
+    workId: string;
+}
+export function AbasCadastroObra({ workId }: Props) {
     // Controla qual aba está ativa visualmente
     const [activeTab, setActiveTab] = useState("materiais");
     
@@ -30,45 +34,45 @@ export function AbasCadastroObra() {
                         <div>
                             <Tab label="materiais">Materiais</Tab>
                             <Tab label="funcionarios">Funcionários</Tab>
-                            <Tab label="cronograma">Etapas</Tab>
                             
                             {/* --- Abas novas do Git Pull --- */}
                             <Tab label="tipos">Tipos</Tab>
                             <Tab label="categorias">Categorias</Tab>
                             
-                            {/* Aba Subetapas (Sua implementação) */}
+                            <Tab label="etapa">Etapas</Tab>
                             <Tab label="subetapas" disabled={!selectedStage}>
                                 {selectedStage ? `Subetapas de: ${selectedStage.name}` : "Subetapas"}
                             </Tab>
+                            {/* Aba Subetapas (Sua implementação) */}
                         </div>
                     </div>
                 </TabList>
 
                 <TabPanels>
                     <TabPanel whenActive="materiais">
-                        <MateriaisPanel />
+                        <MateriaisPanel workId={workId} />
                     </TabPanel>
                     
                     <TabPanel whenActive="funcionarios">
-                        <FuncionariosPanel />
+                        <FuncionariosPanel workId={workId} />
                     </TabPanel>
                     
-                    <TabPanel whenActive="cronograma">
+                    <TabPanel whenActive="etapa">
                         {/* Passamos a função de seleção para dentro do painel */}
-                        <CronogramaPanel onSelectStage={handleSelectStage} />
+                        <EtapaPanel onSelectStage={handleSelectStage}  workId={workId}/>
                     </TabPanel>
 
                     {/* --- Painéis novos do Git Pull --- */}
                     <TabPanel whenActive="tipos">
-                        <TiposPanel />
+                        <TiposPanel workId={workId}/>
                     </TabPanel>
 
                     <TabPanel whenActive="categorias">
-                        <CategoriasPanel />
+                        <CategoriasPanel workId={workId}/>
                     </TabPanel>
 
                     <TabPanel whenActive="subetapas">
-                        <SubetapasPanel selectedStage={selectedStage} />
+                        <SubetapasPanel selectedStage={selectedStage} workId={workId} />
                     </TabPanel>
                 </TabPanels>
             </Tabs>

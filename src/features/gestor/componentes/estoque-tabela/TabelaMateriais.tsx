@@ -9,7 +9,6 @@ interface Material {
   tipo: string;
   categoria: string;
   unidade: string;
-  etapa: string;
   qtde: number;
   massa: number;
   comprimento: number;
@@ -45,6 +44,7 @@ export default function TabelaMateriais({ endpoint }: TabelaMateriaisProps) {
   const toggleFiltros = () => setIsFiltrosOpen(!isFiltrosOpen);
 
   // Buscar dados da API
+  // Buscar dados da API
   async function carregarDados() {
     setLoading(true);
     try {
@@ -56,28 +56,49 @@ export default function TabelaMateriais({ endpoint }: TabelaMateriaisProps) {
       const dados = await resposta.json();
       const dadosBrutos = dados.stock || dados;
 
+      // Log para você visualizar no Inspecionar Elemento (F12) o que realmente está chegando
+      console.log("Dados recebidos da API:", dadosBrutos);
+
       if (!Array.isArray(dadosBrutos)) {
         throw new Error("Formato de dados inesperado da API.");
       }
 
-      const dadosFormatados: Material[] = dadosBrutos.map((item: any) => ({
-        id_stock: item.id_stock,
-        codigo: item.code,
-        nome: item.name,
-        tipo: item.id_type ? String(item.id_type) : '',
-        categoria: item.id_category ? String(item.id_category) : '',
-        unidade: item.unitMeasure,
-        etapa: item.stage ? String(item.stage) : '',
-        qtde: item.stockQuantity,
-        massa: item.weightLength,
-        comprimento: item.weightLength,
-        atual: item.actualQuantity,
-        minima: item.minQuantity,
-        entrada_rec: item.recentInflow,
-        entrada_acu: item.cumulativeInflow,
-        saida_rec: item.recentOutflow,
-        saida_acu: item.cumulativeOutflow,
-      }));
+      const dadosFormatados: Material[] = dadosBrutos.map((item: any) => {
+        // Tenta resolver TIPO
+        let tipoResolvido = '-';
+        if (item.type && item.type.name) tipoResolvido = item.type.name; // Objeto aninhado
+        else if (item.typeName) tipoResolvido = item.typeName; // Campo flat (se existir)
+        else if (item.id_type) tipoResolvido = String(item.id_type); // ID (último recurso)
+        else if (item.type) tipoResolvido = String(item.type); // Valor direto
+
+        // Tenta resolver CATEGORIA
+        let catResolvida = '-';
+        if (item.category && item.category.name) catResolvida = item.category.name;
+        else if (item.categoryName) catResolvida = item.categoryName;
+        else if (item.id_category) catResolvida = String(item.id_category);
+        else if (item.category) catResolvida = String(item.category);
+        
+
+        return {
+          id_stock: item.id_stock,
+          codigo: item.code,
+          nome: item.name,
+          
+          tipo: tipoResolvido,
+          categoria: catResolvida,
+
+          unidade: item.unitMeasure,
+          qtde: item.stockQuantity,
+          massa: item.weightLength,
+          comprimento: item.weightLength,
+          atual: item.actualQuantity,
+          minima: item.minQuantity,
+          entrada_rec: item.recentInflow,
+          entrada_acu: item.cumulativeInflow,
+          saida_rec: item.recentOutflow,
+          saida_acu: item.cumulativeOutflow,
+        };
+      });
 
       setMateriaisBrutos(dadosFormatados);
     } catch (erro) {
@@ -102,11 +123,9 @@ export default function TabelaMateriais({ endpoint }: TabelaMateriaisProps) {
     });
   }, [materiaisBrutos, filterParams]);
 
-  
-
   if (loading) {
     return (
-      <div className="flex items-center justify-center h-32 text-gray-400">
+      <div className="flex items-center justify-center h-full flex-1 text-gray-400 min-h-[200px]">
         <FiLoader className="animate-spin mr-2" />
         Carregando dados...
       </div>
@@ -114,118 +133,121 @@ export default function TabelaMateriais({ endpoint }: TabelaMateriaisProps) {
   }
 
   return (
-    <div className="w-full flex-1 flex flex-col">
-      {/* Botão de filtros */}
-      <div className="flex justify-between items-center mb-4">
-        <p className="text-sm text-gray-500">
-          {materiaisFiltrados.length} materiais encontrados.
-        </p>
-        <button
-          onClick={toggleFiltros}
-          className={`flex items-center px-4 py-2 font-semibold rounded-lg shadow-md transition-colors ${
-            isFiltrosOpen ? 'bg-[#9A2020] hover:bg-[#7a1a1a] text-white' : 'bg-[#607D8B] hover:bg-[#455A64] text-white'
-          }`}
-        >
-          {isFiltrosOpen ? (
-            <>
-              <FiX className="mr-2" />
-              Fechar
-            </>
-          ) : (
-            <>
-              <FiFilter className="mr-2" />
-              Pesquisar
-            </>
-          )}
-        </button>
-      </div>
-
-      {/* Painel de filtros */}
-      {isFiltrosOpen && (
-        <div className="bg-white p-4 mb-4 rounded-2xl border border-[#c4c4c4] shadow-sm grid grid-cols-1 md:grid-cols-3 gap-4">
-          {/* Código */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Buscar por Código</label>
-            <div className="relative">
-              <input
-                type="text"
-                placeholder="Digite o código..."
-                value={filterParams.codigo}
-                onChange={(e) => setFilterParams({ ...filterParams, codigo: e.target.value })}
-                className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-[#607D8B] focus:border-[#607D8B] outline-none"
-              />
-              <FiSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
-            </div>
-          </div>
-
-          {/* Categoria */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Filtrar por Categoria</label>
-            <select
-              value={filterParams.categoria}
-              onChange={(e) => setFilterParams({ ...filterParams, categoria: e.target.value })}
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-[#607D8B] focus:border-[#607D8B] outline-none bg-white"
-            >
-              <option value="">Todas as Categorias</option>
-              {Array.from(new Set(materiaisBrutos.map(m => m.categoria))).sort().map(cat => (
-                <option key={cat} value={cat}>{cat}</option>
-              ))}
-            </select>
-          </div>
-
-          {/* Limpar filtros */}
-          <div className="flex items-end">
+    // CORREÇÃO 2: 'h-full' e 'overflow-hidden' impedem scroll na página inteira
+    <div className="flex flex-col h-full w-full overflow-hidden">
+      
+      {/* Botão de filtros e cabeçalho da tabela */}
+      <div className="flex-none mb-1">
+          <div className="flex justify-between items-center">
+            <p className="text-sm text-gray-500">
+              {materiaisFiltrados.length} materiais encontrados.
+            </p>
             <button
-              onClick={() => setFilterParams({ codigo: '', categoria: '' })}
-              className="w-full px-4 py-2 bg-gray-200 text-gray-700 font-semibold rounded-lg hover:bg-gray-300 transition-colors"
+              onClick={toggleFiltros}
+              className={`flex items-center px-4 py-2 font-semibold rounded-lg shadow-md transition-colors ${
+                isFiltrosOpen ? 'bg-[#9A2020] hover:bg-[#7a1a1a] text-white' : 'bg-[#607D8B] hover:bg-[#455A64] text-white'
+              }`}
             >
-              Limpar Filtros
+              {isFiltrosOpen ? (
+                <> <FiX className="mr-2" /> Fechar </>
+              ) : (
+                <> <FiFilter className="mr-2" /> Pesquisar </>
+              )}
             </button>
           </div>
-        </div>
-      )}
 
-      {/* Tabela */}
-      <div className="overflow-y-auto rounded-2xl w-full h-full border border-[#c4c4c4] shadow-sm bg-white">
-        <table className="min-w-full border-collapse">
-          <thead className="bg-white text-gray-700 sticky top-0 z-10">
+          {/* Painel de filtros */}
+          {isFiltrosOpen && (
+            <div className="bg-white p-4 mt-4 rounded-2xl border border-[#c4c4c4] shadow-sm grid grid-cols-1 md:grid-cols-3 gap-4">
+              {/* Código */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Buscar por Código</label>
+                <div className="relative">
+                  <input
+                    type="text"
+                    placeholder="Digite o código..."
+                    value={filterParams.codigo}
+                    onChange={(e) => setFilterParams({ ...filterParams, codigo: e.target.value })}
+                    className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-[#607D8B] focus:border-[#607D8B] outline-none"
+                  />
+                  <FiSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
+                </div>
+              </div>
+
+              {/* Categoria */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Filtrar por Categoria</label>
+                <select
+                  value={filterParams.categoria}
+                  onChange={(e) => setFilterParams({ ...filterParams, categoria: e.target.value })}
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-[#607D8B] focus:border-[#607D8B] outline-none bg-white"
+                >
+                  <option value="">Todas as Categorias</option>
+                  {Array.from(new Set(materiaisBrutos.map(m => m.categoria))).sort().map(cat => (
+                    <option key={cat} value={cat}>{cat}</option>
+                  ))}
+                </select>
+              </div>
+
+              {/* Limpar filtros */}
+              <div className="flex items-end">
+                <button
+                  onClick={() => setFilterParams({ codigo: '', categoria: '' })}
+                  className="w-full px-4 py-2 bg-gray-200 text-gray-700 font-semibold rounded-lg hover:bg-gray-300 transition-colors"
+                >
+                  Limpar Filtros
+                </button>
+              </div>
+            </div>
+          )}
+      </div>
+
+      {/* Tabela - Altura Dinâmica */}
+      {/* SE FILTRO ABERTO: h-[210px] */}
+      {/* SE FILTRO FECHADO: flex-1 (ocupa todo o resto) */}
+      <div className={`overflow-y-scroll max-h-[328px] rounded-2xl border border-[#c4c4c4] shadow-sm bg-white relative w-full ${isFiltrosOpen ? 'h-[210px]' : 'flex-1'}`}>
+        <table className="min-w-full border-collapse text-sm whitespace-nowrap">
+          <thead className="bg-white text-gray-700 sticky top-0 z-10 shadow-sm">
             <tr>
-              <th className="p-2 text-left">Código</th>
-              <th className="p-2 text-left">Nome</th>
-              <th className="p-2 text-left">Tipo</th>
-              <th className="p-2 text-left">Categoria</th>
-              <th className="p-2 text-left">Un. Medida</th>
-              <th className="p-2 text-left">Etapa</th>
-              <th className="p-2 text-center">Qtde</th>
-              <th className="p-2 text-center">Massa (Kg)</th>
-              <th className="p-2 text-center">Comp. (mm)</th>
-              <th className="p-2 text-center">Atual</th>
-              <th className="p-2 text-center">Mínima</th>
+              <th className="p-3 text-left font-semibold border-b">Código</th>
+              <th className="p-3 text-left font-semibold border-b">Nome</th>
+              <th className="p-3 text-left font-semibold border-b">Tipo</th>
+              <th className="p-3 text-left font-semibold border-b">Categoria</th>
+              <th className="p-3 text-left font-semibold border-b">Un. Medida</th>
+              <th className="p-3 text-center font-semibold border-b">Qtde</th>
+              <th className="p-3 text-center font-semibold border-b">Massa (Kg)</th>
+              <th className="p-3 text-center font-semibold border-b">Comp. (mm)</th>
+              <th className="p-3 text-center font-semibold border-b">Atual</th>
+              <th className="p-3 text-center font-semibold border-b">Mínima</th>
             </tr>
           </thead>
           <tbody>
-            {materiaisFiltrados.map((item, i) => (
-              <tr key={i} className="hover:bg-gray-50 border-b border-[#e0e0e0] transition-colors">
-                <td className="p-2">{item.codigo}</td>
-                <td className="p-2">{item.nome}</td>
-                <td className="p-2">{item.tipo}</td>
-                <td className="p-2">{item.categoria}</td>
-                <td className="p-2">{item.unidade}</td>
-                <td className="p-2">{item.etapa}</td>
-                <td className="p-2 text-center">{item.qtde}</td>
-                <td className="p-2 text-center">{item.massa}</td>
-                <td className="p-2 text-center">{item.comprimento}</td>
-                <td className="p-2 text-center">{item.atual}</td>
-                <td className="p-2 text-center">{item.minima}</td>
-              </tr>
-            ))}
+            {materiaisFiltrados.length === 0 ? (
+                <tr>
+                    <td colSpan={10} className="text-center p-8 text-gray-500">
+                        Nenhum material encontrado.
+                    </td>
+                </tr>
+            ) : (
+                materiaisFiltrados.map((item, i) => (
+                <tr key={i} className="hover:bg-blue-50 border-b border-[#e0e0e0] transition-colors last:border-0">
+                    <td className="p-3 font-mono text-xs text-gray-600">{item.codigo}</td>
+                    <td className="p-3 font-medium text-gray-800">{item.nome}</td>
+                    <td className="p-3 text-gray-600">{item.tipo}</td>
+                    <td className="p-3 text-gray-600">{item.categoria}</td>
+                    <td className="p-3 text-gray-600">{item.unidade}</td>
+                    <td className="p-3 text-center">{item.qtde}</td>
+                    <td className="p-3 text-center">{item.massa}</td>
+                    <td className="p-3 text-center">{item.comprimento}</td>
+                    <td className={`p-3 text-center font-bold ${item.atual <= item.minima ? 'text-red-600' : 'text-green-600'}`}>
+                        {item.atual}
+                    </td>
+                    <td className="p-3 text-center text-gray-500">{item.minima}</td>
+                </tr>
+                ))
+            )}
           </tbody>
         </table>
-        {materiaisFiltrados.length === 0 && !loading && (
-          <div className="text-center p-8 text-gray-500">
-            Nenhum material encontrado com os filtros aplicados.
-          </div>
-        )}
       </div>
     </div>
   );

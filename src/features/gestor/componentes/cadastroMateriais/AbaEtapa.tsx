@@ -9,6 +9,7 @@ import { api } from "../../../../services/api";
 
 interface StageData {
     id_stage: number;
+    id_work: number;
     name: string;
     expStartDate: string;
     expEndDate: string;
@@ -22,11 +23,12 @@ const stageSchema = z.object({
 });
 
 interface CronogramaPanelProps {
+    workId: string; // Recebe o ID da obra selecionada
     onSelectStage: (id: number, name: string) => void;
 }
 
-export function CronogramaPanel({ onSelectStage }: CronogramaPanelProps) {
-    const CURRENT_WORK_ID = 1; 
+export function EtapaPanel({ workId, onSelectStage }: CronogramaPanelProps) {
+    // REMOVIDO: const CURRENT_WORK_ID = 1; (Usaremos workId das props)
 
     const [isVisible, setIsVisible] = useState(false);
     const [stages, setStages] = useState<StageData[]>([]);
@@ -46,22 +48,29 @@ export function CronogramaPanel({ onSelectStage }: CronogramaPanelProps) {
     const fetchStages = async () => {
         try {
             setLoading(true);
-            const response = await api.get(`/stage/list/${CURRENT_WORK_ID}`);
+            const response = await api.get(`/stage/list/${workId}`);
+            
             if (response.data && response.data.stages) {
+                // REMOVIDO O FILTRO QUE APAGAVA TUDO
+                // O backend já filtrou, confiamos nele.
                 setStages(response.data.stages);
+            } else if (Array.isArray(response.data)) {
+                setStages(response.data);
             } else {
                 setStages([]);
             }
         } catch (error) {
-            console.warn("Erro ao buscar etapas.");
+            console.warn("Erro ao buscar etapas:", error);
+            setStages([]);
         } finally {
             setLoading(false);
         }
     };
 
+    // AJUSTE 2: Recarrega se mudar de obra
     useEffect(() => {
         fetchStages();
-    }, []);
+    }, [workId]);
 
     const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const { name, value } = e.target;
@@ -80,8 +89,9 @@ export function CronogramaPanel({ onSelectStage }: CronogramaPanelProps) {
         if (item) {
             setFormData({
                 name: item.name,
-                expStartDate: item.expStartDate ? item.expStartDate.split('T')[0] : '',
-                expEndDate: item.expEndDate ? item.expEndDate.split('T')[0] : '',
+                // Mantém apenas a parte da data YYYY-MM-DD
+                expStartDate: item.expStartDate ? String(item.expStartDate).split('T')[0] : '',
+                expEndDate: item.expEndDate ? String(item.expEndDate).split('T')[0] : '',
             });
             setIsVisible(true);
         }
@@ -106,28 +116,51 @@ export function CronogramaPanel({ onSelectStage }: CronogramaPanelProps) {
         e.preventDefault();
         try {
             const data = stageSchema.parse(formData);
-            const payload = { ...data, id_work: CURRENT_WORK_ID, progress: 0, exeStartDate: "", exeEndDate: "" };
+            
+            // Função para converter data para ISO (Backend precisa disso)
+            const toISO = (dateStr: string) => {
+                if (!dateStr) return null;
+                return new Date(dateStr).toISOString();
+            };
+
+            const payload = { 
+                ...data, 
+                id_work: Number(workId), 
+                progress: 0, 
+                // Datas Obrigatórias em ISO
+                expStartDate: toISO(data.expStartDate),
+                expEndDate: toISO(data.expEndDate),
+                // Datas Opcionais como NULL
+                exeStartDate: null, 
+                exeEndDate: null
+            };
+
+            console.log("Enviando:", payload);
 
             if (selectedId) {
                 await api.put(`/stage/update/${selectedId}`, payload);
                 alert("Etapa atualizada!");
             } else {
                 await api.post("/stage/register", payload);
-                alert("Etapa criada!");
+                alert("Etapa criada com sucesso!");
             }
+            
             setIsVisible(false);
             resetForm();
             setSelectedId(null);
-            fetchStages();
+            fetchStages(); 
+
         } catch (error) {
             console.error(error);
-            alert("Erro ao salvar.");
+            // @ts-ignore
+            const msg = error.response?.data?.error || error.response?.data?.message || "Erro ao salvar.";
+            alert(`Falha: ${msg}`);
         }
     };
 
     return (
-        <div className="overflow-y-scroll h-[250px]">
-            {/* FORMULÁRIO */}
+        <div className="overflow-y-scroll h-[350px] pb-4">
+            {/* ... O resto do seu JSX (HTML) permanece IGUAL ... */}
             {isVisible && (
                 <div className="w-full space-y-2 py-2 px-4 bg-white rounded-lg shadow-md mb-4 border border-gray-200">
                     <h3 className="text-sm font-bold text-gray-700 mb-2">
@@ -156,7 +189,6 @@ export function CronogramaPanel({ onSelectStage }: CronogramaPanelProps) {
                 </div>
             )}
 
-            {/* BOTÕES DE AÇÃO */}
             <div className="flex justify-end mt-2 gap-2">
                 <Button 
                     onClick={handleNewClick} 
@@ -164,7 +196,6 @@ export function CronogramaPanel({ onSelectStage }: CronogramaPanelProps) {
                 >
                     <img src={incluirSvg} className="w-4 h-4" alt="incluir" /> Incluir
                 </Button>
-                
                 <Button 
                     onClick={handleEditClick} 
                     className={`flex items-center gap-2 px-4 h-[26px] text-sm rounded-none border-1 border-gray-400 ${selectedId ? 'bg-blue-100 text-blue-800 hover:bg-blue-200' : 'bg-gray-200 text-gray-500 cursor-not-allowed'}`}
@@ -172,7 +203,6 @@ export function CronogramaPanel({ onSelectStage }: CronogramaPanelProps) {
                 >
                     <img src={editarSvg} className="w-4 h-4" alt="editar" /> Editar
                 </Button>
-                
                 <Button 
                     onClick={handleDeleteClick} 
                     className={`flex items-center gap-2 px-4 h-[26px] text-sm rounded-none border-1 border-gray-400 ${selectedId ? 'bg-red-100 text-red-800 hover:bg-red-200 border-red-300' : 'bg-gray-200 text-gray-500 cursor-not-allowed'}`}
@@ -182,7 +212,6 @@ export function CronogramaPanel({ onSelectStage }: CronogramaPanelProps) {
                 </Button>
             </div>
 
-            {/* TABELA */}
             <table className="bg-white border border-gray-300 w-full text-left mt-2 text-sm">
                 <thead>
                     <tr className="bg-gray-300">
@@ -195,7 +224,7 @@ export function CronogramaPanel({ onSelectStage }: CronogramaPanelProps) {
                 </thead>
                 <tbody>
                     {stages.length === 0 ? (
-                        <tr><td colSpan={5} className="p-2 text-center text-gray-500">Nenhuma etapa cadastrada.</td></tr>
+                        <tr><td colSpan={5} className="p-2 text-center text-gray-500">Nenhuma etapa cadastrada nesta obra.</td></tr>
                     ) : (
                         stages.map(item => (
                             <tr 

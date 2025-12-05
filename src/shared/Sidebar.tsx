@@ -48,13 +48,13 @@ const sidebarLinks = [
     },
     {
         label: 'Cronograma',
-        to: '#', 
+        to: '/cronograma-fisico', 
         icon: images.cronograma,
         roles: ['manager'] 
     },
     {
         label: 'Orçamento',
-        to: '/orçamento', 
+        to: '/orcamento', 
         icon: images.Orçamento,
         roles: ['manager'] 
     },

@@ -1,8 +1,8 @@
 import { useEffect, useState } from "react";
 import { z, ZodError } from "zod";
 import { AxiosError } from "axios";
-import { InputForm } from "../InputForm";
-import { Button } from "../../../auth/components/Button";
+import { InputForm } from "../InputForm"; 
+import { Button } from "../../../auth/components/Button"; 
 import editarSvg from "../../../../assets/editar.svg";
 import incluirSvg from "../../../../assets/incluir.svg";
 import deletarSvg from "../../../../assets/deletar.svg";
@@ -31,41 +31,69 @@ const funcSchema = z.object({
     hourlyRate: z.coerce.number().positive("O ganho por hora deve ser um valor positivo"),
 });
 
-export function FuncionariosPanel() {
+interface Props {
+    workId: string;
+}
+
+export function FuncionariosPanel({ workId }: Props) {
     const [isVisible, setIsVisible] = useState(false);
+    
     const [funcionarios, setFuncionarios] = useState<FuncionarioData[]>([]);
+    
+    
+    const [allUsers, setAllUsers] = useState<FuncionarioData[]>([]);
+    
     const [loading, setLoading] = useState(true);
     const [selectedId, setSelectedId] = useState<number | null>(null);
 
+    
+    const ENTERPRISE_ID = "1"; 
+
     const [formFuncData, setFormFuncData] = useState({
-        enterprise_id: "1",
+        enterprise_id: ENTERPRISE_ID,
         name: "",
         userFunction: "",
         email: "",
         password: "123456",
         phone: "",
-        works: "",
+        works: workId, 
         hourlyRate: "",
     });
 
+    
+    useEffect(() => {
+        setFormFuncData(prev => ({ ...prev, works: workId }));
+    }, [workId]);
+
     const resetForm = () => {
         setFormFuncData({
-            enterprise_id: "1",
+            enterprise_id: ENTERPRISE_ID,
             name: "",
             userFunction: "",
             email: "",
             password: "123456",
             phone: "",
-            works: "",
+            works: workId, 
             hourlyRate: "",
         });
     };
 
     const fetchFuncionarios = async () => {
         try {
-            const response = await api.get(`/user/list/1`);
-            const usuariosAtivos = response.data.filter((user: any) => user.isActive === true);
-            setFuncionarios(usuariosAtivos);
+            
+            const response = await api.get(`/user/list/${ENTERPRISE_ID}`);
+            const todosAtivos = response.data.filter((user: any) => user.isActive === true);
+            
+            
+            setAllUsers(todosAtivos);
+
+           
+            const apenasDestaObra = todosAtivos.filter((user: FuncionarioData) => 
+                String(user.works) === String(workId)
+            );
+            
+            setFuncionarios(apenasDestaObra);
+
         } catch (error) {
             console.error("Erro ao buscar dados:", error);
         } finally {
@@ -75,7 +103,7 @@ export function FuncionariosPanel() {
 
     useEffect(() => {
         fetchFuncionarios();
-    }, []);
+    }, [workId]); 
 
     const handleInputChange = (event: React.ChangeEvent<HTMLInputElement>) => {
         const { name, value } = event.target;
@@ -98,9 +126,9 @@ export function FuncionariosPanel() {
                 name: funcToEdit.name,
                 userFunction: funcToEdit.userFunction,
                 email: funcToEdit.email,
-                password: "123456",
+                password: "123456", 
                 phone: funcToEdit.phone || "",
-                works: funcToEdit.works || "",
+                works: funcToEdit.works || workId, 
                 hourlyRate: String(funcToEdit.hourlyRate),
             });
             setIsVisible(true);
@@ -133,6 +161,18 @@ export function FuncionariosPanel() {
 
     const handleFuncSubmit = async (event: React.FormEvent) => {
         event.preventDefault();
+        const usuarioDuplicado = allUsers.find(u => 
+            u.email === formFuncData.email && // Mesmo email
+            String(u.works) !== String(workId) && 
+            u.id_user !== selectedId 
+        );
+
+        if (usuarioDuplicado) {
+            alert(`BLOQUEADO: O funcionário com email "${formFuncData.email}" já está cadastrado na Obra ID: ${usuarioDuplicado.works}.\n\nNão é permitido alocar o mesmo funcionário em duas obras simultaneamente.`);
+            return; // Cancela o envio
+        }
+        // -----------------------------------------
+
         try {
             setLoading(true);
             const data = funcSchema.parse({
@@ -192,11 +232,10 @@ export function FuncionariosPanel() {
                             legend="Ganho/h:" name="hourlyRate" value={formFuncData.hourlyRate} onChange={handleInputChange} containerClassName="w-1/3" 
                         />
                         <InputForm 
-                            legend="Atividades atribuídas:" name="works" value={formFuncData.works} onChange={handleInputChange} containerClassName="w-1/3" 
+                            legend="ID Obra:" name="works" value={formFuncData.works} onChange={handleInputChange} containerClassName="w-1/3" 
                         />
                     </div>
                     
-                    {/* BOTÕES DE AÇÃO DO FORMULÁRIO */}
                     <div className="flex gap-2 mt-2 justify-end">
                         <Button 
                             className="px-4 py-1 text-sm bg-gray-350 hover:bg-gray-300 border border-gray-400 text-black" 
@@ -217,33 +256,36 @@ export function FuncionariosPanel() {
             )}
 
             <div className="flex justify-end mt-4 gap-2">
-                <Button onClick={handleNewClick} className="flex items-center gap-2 px-4 h-[26px] text-sm bg-gray-350 text-black hover:bg-gray-300 rounded-none border-1 border-gray-400">
-                    <img src={incluirSvg} alt="incluir" />Incluir
+                <Button onClick={handleNewClick} className="flex items-center gap-2 px-4 h-[26px] text-sm bg-gray-350 text-black hover:bg-gray-300 rounded-none border border-gray-400">
+                    <img src={incluirSvg} alt="incluir" className="w-4 h-4" />Incluir
                 </Button>
                 <Button 
                     onClick={handleEditClick}
-                    className={`flex items-center gap-2 px-4 h-[26px] text-sm rounded-none border-1 border-gray-400 ${selectedId ? 'bg-blue-100 text-blue-800 hover:bg-blue-200' : 'bg-gray-350 opacity-50'}`}
+                    className={`flex items-center gap-2 px-4 h-[26px] text-sm rounded-none border border-gray-400 ${selectedId ? 'bg-blue-100 text-blue-800 hover:bg-blue-200' : 'bg-gray-350 opacity-50'}`}
                 >
-                    <img src={editarSvg} alt="editar" />Editar
+                    <img src={editarSvg} alt="editar" className="w-4 h-4" />Editar
                 </Button>
                 <Button 
                     onClick={handleDeleteClick} 
-                    className={`flex items-center gap-2 px-4 h-[26px] text-sm rounded-none border-1 border-gray-400 ${selectedId ? 'bg-red-100 text-red-800 hover:bg-red-200' : 'bg-gray-350 opacity-50'}`}
+                    className={`flex items-center gap-2 px-4 h-[26px] text-sm rounded-none border border-gray-400 ${selectedId ? 'bg-red-100 text-red-800 hover:bg-red-200' : 'bg-gray-350 opacity-50'}`}
                 >
-                    <img src={deletarSvg} alt="excluir" />Excluir
+                    <img src={deletarSvg} alt="excluir" className="w-4 h-4" />Excluir
                 </Button>
             </div>
 
-            <table className="bg-white border-1 border-gray-500 w-full text-left mt-2">
+            <table className="bg-white border border-gray-500 w-full text-left mt-2 text-sm">
                 <thead> 
                     <tr className="bg-gray-300">
-                        <th className="px-1 border-1">Código</th>
-                        <th className="px-1 border-1">Funcionário</th>
-                        <th className="px-1 border-1">Ganho/h</th>
-                        <th className="px-1 border-1">Função</th>
+                        <th className="px-1 border border-gray-400">Código</th>
+                        <th className="px-1 border border-gray-400">Funcionário</th>
+                        <th className="px-1 border border-gray-400">Ganho/h</th>
+                        <th className="px-1 border border-gray-400">Função</th>
                     </tr>
                 </thead>
                 <tbody>
+                    {funcionarios.length === 0 && !loading && (
+                         <tr><td colSpan={4} className="text-center p-2 text-gray-500">Nenhum funcionário cadastrado nesta obra.</td></tr>
+                    )}
                     {funcionarios.map((func) => (
                         <tr 
                             key={func.id_user} 
@@ -258,14 +300,14 @@ export function FuncionariosPanel() {
                                     setSelectedId(func.id_user); 
                                 }
                             }}
-                            className={`text-sm border-b-1 border-gray-500 cursor-pointer hover:bg-gray-50 ${selectedId === func.id_user ? 'bg-blue-200' : ''}`}
+                            className={`cursor-pointer hover:bg-gray-50 border-b border-gray-300 ${selectedId === func.id_user ? 'bg-blue-200' : ''}`}
                         >
-                            <td className="px-2 border-1">{func.id_user}</td>
-                            <td className="px-2 border-1">{func.name}</td>
-                            <td className="px-2 border-1">
+                            <td className="px-2 border border-gray-300">{func.id_user}</td>
+                            <td className="px-2 border border-gray-300">{func.name}</td>
+                            <td className="px-2 border border-gray-300">
                                 {(func.hourlyRate || 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
                             </td>
-                            <td className="px-2 border-1">{func.userFunction}</td>
+                            <td className="px-2 border border-gray-300">{func.userFunction}</td>
                         </tr>
                     ))}
                 </tbody>

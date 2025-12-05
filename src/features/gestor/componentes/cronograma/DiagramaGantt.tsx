@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState } from "react";
 // @ts-ignore
-import gantt from "dhtmlx-gantt"; 
+import { gantt } from "dhtmlx-gantt"; 
 import "dhtmlx-gantt/codebase/dhtmlxgantt.css"; 
 
 // interface para o formato de uma sub-etapa vinda da API
