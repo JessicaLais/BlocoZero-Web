@@ -1,4 +1,3 @@
-
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom"; 
 import { useAuth } from "../hooks/useAuth.tsx";
 import { AppLayout } from "../shared/AppLayout";
@@ -12,6 +11,7 @@ import { CronogramaSelecao } from "../features/gestor/componentes/cronograma/Cro
 import { OrcamentoSelecao } from "../features/gestor/componentes/orçamento/OrcamentoSelecao.tsx";
 import { EstoqueSelecao } from "../features/gestor/componentes/estoque-tabela/EstoqueSelecao.tsx";
 import { RelatoriosGestorList } from "../features/gestor/componentes/Relatorios/RelatoriosGestorList.tsx";
+import { RelatoriosGestorPage } from "../pages/VisuRelatorios.tsx";
 import { FinanceiroSelecao } from "../features/financeiro/FinanceiroSelecao.tsx";
 import { CadastroObra } from "../pages/CadastroObra";
 import { Orçamento } from "../pages/Orçamento";
@@ -20,12 +20,11 @@ import EstoqueTab from "../pages/EstoqueTabela";
 import { CronogramaPage } from "../pages/CronogramaFisico";
 import { GerenciarObra } from "../features/gestor/componentes/cadastroMateriais/GerenciarObra.tsx";
 import { Relatorios } from "../pages/Relatorios";
-import {RelatoriosGestorPage} from "../pages/VisuRelatorios.tsx";
-
+import { RelatoriosDevolvidos } from "../pages/RelatoriosDevolvidos.tsx"
 function AppRoutes() {
     const { session } = useAuth();
 
-
+//<Route path="/obra/:work_id/relatorios-gestor" element={<RelatoriosGestorPage />} />
     return (
         <Routes>
             <Route path="/" element={<AppLayout />}>
@@ -45,8 +44,8 @@ function AppRoutes() {
                         <Route path="/orcamento" element={<OrcamentoSelecao />} />
                         <Route path="/financeiro" element={<FinanceiroSelecao/>} />
                         <Route path="/tabela-estoque" element={<EstoqueSelecao />} />
-                        <Route path="/cronograma-fisico" element={<CronogramaSelecao />} />
                         <Route path="/relatorios-gestor" element={<RelatoriosGestorList />} />
+                        <Route path="/cronograma-fisico" element={<CronogramaSelecao />} />
                         <Route path="/" element={<Navigate to="/cadastro-obra" />} />
                     </>
                 )}
@@ -62,7 +61,7 @@ function AppRoutes() {
                         <Route path="/estoque/:work_id" element={<EstoqueObra />} />
                         <Route path="/" element={<Navigate to="/work" />} />
                         <Route path="/relatorios" element={<Relatorios />} />
-                        <Route path="/cronograma-fisico" element={<CronogramaSelecao />} />
+                        <Route path="/relatorios-devolvidos" element={<RelatoriosDevolvidos/>} />
                      </>
                 )}
 
@@ -84,3 +83,4 @@ export function AppRouter() {
         </BrowserRouter>
     );
 }
+

@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { FaHome, FaCalendarAlt, FaBox, FaChartBar, FaCaretDown, FaCaretUp, FaSignOutAlt } from 'react-icons/fa';
+import { FaHome, FaCalendarAlt, FaBox, FaChartBar, FaSignOutAlt } from 'react-icons/fa';
 import Teste from "../assets/Teste.png";
 import { Link, NavLink } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth'; 
@@ -8,7 +8,7 @@ import { images } from '../assets';
 interface SidebarLink {
     label: string;
     to: string;
-    icon: any;
+    icon?: any; 
     roles: string[];
     children?: SidebarLink[];
 }
@@ -31,14 +31,28 @@ const sidebarLinks: SidebarLink[] = [
         to: '/estoque', 
         icon: FaBox,
         roles: ['tender'] 
-        
     },
     {
         label: 'Relatórios',
         to: '#', 
         icon: FaChartBar,
-        roles: ['tender'] 
+        roles: ['tender'],
+        children: [
+            {
+                label: 'Devolvidos',
+                to: '/relatorios-devolvidos', 
+                roles: ['tender'],
+                icon: undefined 
+            },
+            {
+                label: 'Enviar',
+                to: '/relatorios', 
+                roles: ['tender'],
+                icon: undefined
+            }
+        ]
     },
+
     {
         label: 'Gerir Obras',
         to: '/cadastro-obra',
@@ -63,23 +77,25 @@ const sidebarLinks: SidebarLink[] = [
         icon: images.Estoque,
         roles: ['manager']
     },
-    /* {
-        label: 'Solicitações',
-        to: '#', 
-        icon: images.Solicitaçoes,
-        roles: ['manager']
-    },*/
     {
         label: 'Relatórios',
-        to: '/financeiro',
+        to: '#', 
         icon: images.Relatorios,
-        roles: ['manager']
-    },
-     {
-        label: 'Dashboards',
-        to: 'relatorios-gestor', 
-        icon: images.Dashboards,
-        roles: ['manager']
+        roles: ['manager'],
+        children: [
+            {
+                label: 'Financeiro',
+                to: '/financeiro', 
+                roles: ['manager'],
+                icon: undefined 
+            },
+            {
+                label: 'Físico',
+                to: '/relatorios-gestor', 
+                roles: ['manager'],
+                icon: undefined
+            }
+        ]
     }
 ];
 
@@ -115,8 +131,8 @@ export function Sidebar() {
                         .filter(link => link.roles.includes(userRole)) 
                         .map(link => (
                             
-                            // Como removemos o 'children' do Estoque, ele cairá automaticamente neste bloco 'if'
                             !link.children ? (
+                                // --- ITEM SIMPLES ---
                                 <NavLink
                                     key={link.label}
                                     to={link.to}
@@ -134,7 +150,7 @@ export function Sidebar() {
                                     <span>{link.label}</span>
                                 </NavLink>
                             ) : (
-                                // Este bloco agora só será usado se houver outros itens com submenu no futuro
+                                // --- ITEM COM DROPDOWN (Sem ícones de seta) ---
                                 <div key={link.label} className="relative">
                                     <button
                                         onClick={() => handleDropdownClick(link.label)}
@@ -148,10 +164,10 @@ export function Sidebar() {
                                             )}
                                             <span>{link.label}</span>
                                         </div>
-                                        {openDropdown === link.label ? <FaCaretUp /> : <FaCaretDown />}
                                     </button>
+                                    
                                     {openDropdown === link.label && (
-                                        <div className="flex flex-col gap-2 px-3 mt-2">
+                                        <div className="flex flex-col gap-2 px-3 mt-2 bg-blue-400 rounded py-2">
                                             {link.children
                                                 .filter(child => child.roles.includes(userRole))
                                                 .map(child => (
@@ -159,7 +175,7 @@ export function Sidebar() {
                                                         key={child.label}
                                                         to={child.to}
                                                         className={({ isActive }) =>
-                                                            `p-2 text-sm rounded-md ${
+                                                            `p-2 text-sm rounded-md block ${
                                                             isActive ? 'bg-gray-600 font-bold' : 'hover:bg-gray-600'
                                                             }`
                                                         }
