@@ -6,7 +6,6 @@ interface Stage {
     name: string;
 }
 
-// Interface simplificada (pois o service já tratou os dados)
 interface Substage {
     id_substage: number; 
     stage_id: number;    
@@ -46,10 +45,6 @@ export function FormularioProgresso({ onSubmit, workId }: FormularioProgressoPro
                 relatorioService.getSubetapasByWork(workId)
             ]);
             
-            // Logs para depuração (pode remover depois)
-            console.log("Etapas carregadas:", etapasRes);
-            console.log("Subetapas tratadas:", subetapasRes);
-
             setListaEtapas(etapasRes || []);
             setListaSubetapas(subetapasRes || []);
         } catch (error) {
@@ -57,14 +52,10 @@ export function FormularioProgresso({ onSubmit, workId }: FormularioProgressoPro
         }
     };
 
-    // Filtro: Atualiza dropdown quando a Etapa muda
     useEffect(() => {
         if (formData.etapa) {
             const etapaIdSelecionada = Number(formData.etapa);
-            
-            // Agora o filtro vai funcionar porque o Service extraiu o stage_id corretamente
             const filtradas = listaSubetapas.filter(sub => sub.stage_id === etapaIdSelecionada);
-            
             setSubetapasFiltradas(filtradas);
         } else {
             setSubetapasFiltradas([]);
@@ -130,7 +121,7 @@ export function FormularioProgresso({ onSubmit, workId }: FormularioProgressoPro
                 </div>
             </div>
 
-            {/* LINHA 2: Subetapa Opcional e Filtrada */}
+            {/* LINHA 2: SUBETAPA VOLTOU A SER OBRIGATÓRIA */}
             <div className="flex flex-col xl:flex-row gap-6 mb-6">
                 <div className="flex items-center gap-3 flex-[2]">
                     <label className={labelStyle}>Subetapa:</label>
@@ -140,10 +131,11 @@ export function FormularioProgresso({ onSubmit, workId }: FormularioProgressoPro
                         value={formData.subetapa} 
                         onChange={handleChange}
                         disabled={!formData.etapa}
+                        required // <--- ADICIONADO NOVAMENTE
                     >
                         <option value="">
                             {formData.etapa 
-                                ? (subetapasFiltradas.length > 0 ? "Selecione (Opcional)..." : "Nenhuma subetapa disponível") 
+                                ? "Selecione a subetapa..." // <--- TEXTO AJUSTADO
                                 : "Selecione uma etapa primeiro"}
                         </option>
                         
@@ -163,7 +155,7 @@ export function FormularioProgresso({ onSubmit, workId }: FormularioProgressoPro
                 </div>
             </div>
 
-            {/* Restante do form (Clima, Observações)... igual ao anterior */}
+            {/* LINHA 3 */}
             <div className="flex items-center gap-3 mb-8 w-full xl:w-1/3">
                 <label className={labelStyle}>Clima:</label>
                 <select name="clima" className={`${inputStyle} w-full`} value={formData.clima} onChange={handleChange}>
@@ -176,12 +168,10 @@ export function FormularioProgresso({ onSubmit, workId }: FormularioProgressoPro
                     <option value="tempestade">Tempestade / Chuva Forte ⛈️</option>
                     <option value="vento">Ventania / Vento Forte 🍃</option>
                     <option value="nevoa">Névoa / Neblina 🌫️</option>
-                    <option value="seco">Tempo Seco / Baixa Umidade 🌵</option>
-                    
-                    {/* ... outras opções ... */}
                 </select>
             </div>
 
+            {/* LINHA 4 */}
             <div className="mb-4">
                 <label className={`${labelStyle} mb-2 block`}>Observações:</label>
                 <textarea name="observacoes" rows={8} className="w-full border border-gray-400 rounded-sm p-2 text-sm resize-none focus:outline-none focus:border-gray-600 shadow-sm" value={formData.observacoes} onChange={handleChange}></textarea>

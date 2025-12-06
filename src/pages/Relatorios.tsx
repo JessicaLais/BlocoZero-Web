@@ -2,16 +2,12 @@ import { useState } from "react";
 import { FormularioProgresso } from "../features/relatorios/components/FormularioProgresso"; 
 import { ImageUpload } from "../features/relatorios/components/ImageUpload"; 
 import { Button } from "../features/auth/components/Button"; 
-
-// --- CORREÇÃO AQUI: Importando a interface e o serviço do mesmo lugar ---
 import { relatorioService, type RelatorioEnvioDTO } from "../services/relatorioService"; 
 
 export function Relatorios() {
     
     const [selectedFile, setSelectedFile] = useState<File | null>(null);
     const [loading, setLoading] = useState(false);
-
-    // Mock ID da Obra e Usuário
     const MOCK_USER_ID = 5; 
     const MOCK_WORK_ID = 1; 
 
@@ -24,12 +20,11 @@ export function Relatorios() {
         try {
             setLoading(true);
 
-            // Agora o TypeScript vai reconhecer esse tipo vindo do import correto
             const dadosEnvio: RelatorioEnvioDTO = {
                 id_work: MOCK_WORK_ID,
                 id_user: MOCK_USER_ID,
                 id_stage: Number(formData.etapa),
-                id_substage: formData.subetapa ? Number(formData.subetapa) : undefined, 
+                id_substage: Number(formData.subetapa), 
                 startDate: formData.inicio,
                 endDate: formData.fim,
                 weather: formData.clima,
@@ -61,7 +56,6 @@ export function Relatorios() {
 
             <div className="flex flex-col lg:flex-row gap-12">
                 <div className="flex-1">
-                    {/* Passamos o Work ID para o formulário saber o que buscar */}
                     <FormularioProgresso onSubmit={handleFormSubmit} workId={MOCK_WORK_ID} />
                 </div>
 

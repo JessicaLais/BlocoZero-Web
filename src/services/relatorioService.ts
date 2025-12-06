@@ -1,11 +1,11 @@
-// src/services/relatorioService.ts
 import { api } from './api';
 
+// Essa interface precisa estar exportada aqui para o erro de import sumir
 export interface RelatorioEnvioDTO {
   id_work: number;
   id_user: number;
   id_stage: number;
-  id_substage?: number;
+  id_substage: number; // Obrigatório
   startDate: string;
   endDate: string;
   weather: string;
@@ -15,30 +15,39 @@ export interface RelatorioEnvioDTO {
 }
 
 export const relatorioService = {
-  // ... (createRelatorio e getEtapas permanecem iguais)
   createRelatorio: async (dados: RelatorioEnvioDTO) => {
-      // ... (código do createRelatorio que já estava funcionando)
-      try {
-        const formData = new FormData();
-        formData.append('id_work', String(dados.id_work));
-        formData.append('id_user', String(dados.id_user)); 
-        formData.append('id_stage', String(dados.id_stage));
-        if (dados.id_substage) formData.append('id_substage', String(dados.id_substage));
-        formData.append('startDate', dados.startDate);
-        formData.append('endDate', dados.endDate);
-        formData.append('weather', dados.weather);
-        formData.append('completionPercentage', String(dados.completionPercentage));
-        formData.append('notes', dados.notes);
-        formData.append('status', 'PENDENTE');
-        if (dados.photo) formData.append('photo', dados.photo);
-        else throw new Error("A foto é obrigatória!");
+    try {
+      const formData = new FormData();
+      
+      formData.append('id_work', String(dados.id_work));
+      formData.append('id_user', String(dados.id_user)); 
+      formData.append('id_stage', String(dados.id_stage));
+      
+      // Enviando Subetapa obrigatória
+      formData.append('id_substage', String(dados.id_substage));
+      
+      formData.append('startDate', dados.startDate);
+      formData.append('endDate', dados.endDate);
+      formData.append('weather', dados.weather);
+      formData.append('completionPercentage', String(dados.completionPercentage));
+      formData.append('notes', dados.notes);
+      formData.append('status', 'PENDENTE');
 
-        const response = await api.post('/progress-report/register', formData);
-        return response.data;
-      } catch (error: any) {
-        console.error("Erro ao enviar relatório:", error);
-        throw error; 
+      if (dados.photo) {
+        formData.append('photo', dados.photo);
+      } else {
+        throw new Error("A foto é obrigatória!");
       }
+
+      // --- CORREÇÃO DO ERRO 404 ---
+      // Mudamos de "/progress-report" para "/progressReport" (igual ao server.js)
+      const response = await api.post('/progressReport/register', formData);
+      return response.data;
+
+    } catch (error: any) {
+      console.error("Erro ao enviar relatório:", error);
+      throw error; 
+    }
   },
 
   getEtapas: async (workId: number) => {
@@ -51,22 +60,17 @@ export const relatorioService = {
     }
   },
 
-  // --- A MÁGICA ACONTECE AQUI ---
   getSubetapasByWork: async (workId: number) => {
     try {
       const response = await api.get(`/substage/list/${workId}`);
-      
-      // 1. Pegamos a lista crua (que vem cheia de arrays aninhados)
+      // Tratamento para pegar dados aninhados do backend
       const rawData = response.data.subStages || [];
-
-      // 2. O .flat() remove um nível de array (transforma [[A], [B]] em [A, B])
       const listaPlana = rawData.flat();
 
-      // 3. Mapeamos para o formato simples que o nosso formulário espera
       return listaPlana.map((item: any) => ({
-        id_substage: item.substage.id_substage, // Pega o ID de dentro do objeto aninhado
-        name: item.substage.name,               // Pega o nome de dentro do objeto aninhado
-        stage_id: item.stageId                  // Pega o stageId da relação (Isso permite o filtro funcionar!)
+        id_substage: item.substage.id_substage, 
+        name: item.substage.name,               
+        stage_id: item.stageId                  
       }));
 
     } catch (error) {
