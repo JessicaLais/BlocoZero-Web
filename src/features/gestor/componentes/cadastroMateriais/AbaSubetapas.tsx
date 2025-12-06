@@ -302,9 +302,9 @@ export function SubetapasPanel({ workId, selectedStage }: SubetapasPanelProps) {
                 <div className="w-full py-2 px-4 bg-white rounded-lg shadow-md mb-2 border border-gray-200 text-sm">
                     {/* ... campos ... */}
                     <div className="flex gap-4 mb-3">
-                        <InputForm legend="Nome Subetapa:" name="name" value={formData.name} onChange={handleInputChange} containerClassName="w-1/2" />
-                        <InputForm legend="Previsão Fim:" type="date" name="expDuration" value={formData.expDuration} onChange={handleInputChange} containerClassName="w-1/6" />
-                        {selectedId && <InputForm legend="Progresso (%):" type="number" name="progress" value={formData.progress} onChange={handleInputChange} containerClassName="w-1/6" />}
+                        <InputForm legend="Nome Subetapa:" name="name" value={formData.name} onChange={handleInputChange} containerClassName="w-1/3" />
+                        <InputForm legend="Previsão Fim:" type="date" name="expDuration" value={formData.expDuration} onChange={handleInputChange} containerClassName="w-1/3" />
+                        {selectedId && <InputForm legend="Progresso (%):" type="number" name="progress" value={formData.progress} onChange={handleInputChange} containerClassName="w-1/3" />}
                     </div>
                     
                     {!selectedId && (
