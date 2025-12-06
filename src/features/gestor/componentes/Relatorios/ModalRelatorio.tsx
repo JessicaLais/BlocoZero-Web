@@ -1,4 +1,3 @@
-import React from 'react'; // Adicione se necessário no seu projeto
 import { FiX, FiCheck, FiXCircle, FiImage, FiCalendar } from "react-icons/fi";
 
 // ✅ 3. Importando a interface CERTA (Correção do erro de TypeScript)
@@ -28,7 +27,7 @@ export default function RelatorioDetalhesModal({ isOpen, onClose, relatorio, onA
                 <FiCalendar /> {new Date(relatorio.data).toLocaleDateString('pt-BR')} 
             </p>
           </div>
-          <button onClick={onClose} className="text-gray-400 hover:text-gray-600 transition-colors p-1 rounded-full hover:bg-gray-100">
+          <button onClick={onClose} className="text-gray-400 hover:text-gray-600 transition-colors p-1 rounded-full hover:bg-gray-200">
             <FiX size={24} />
           </button>
         </div>
@@ -40,7 +39,7 @@ export default function RelatorioDetalhesModal({ isOpen, onClose, relatorio, onA
           <div className="space-y-4">
              <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">Identificação</label>
-                <div className="w-full bg-gray-100 border border-gray-300 rounded px-3 py-2 text-gray-700 text-sm">
+                <div className="w-full bg-gray-200 border border-gray-300 rounded px-3 py-2 text-gray-700 text-sm">
                    Obra: {relatorio.nomeObra} | Etapa: {relatorio.etapa} | Sub: {relatorio.subetapa}
                 </div>
              </div>
@@ -49,13 +48,13 @@ export default function RelatorioDetalhesModal({ isOpen, onClose, relatorio, onA
                 <div>
                    <label className="block text-sm font-medium text-gray-700 mb-1">Clima</label>
                    {/* Usando campo 'clima' */}
-                   <div className="bg-gray-100 border border-gray-300 rounded px-3 py-2 text-gray-700 text-sm capitalize">
+                   <div className="bg-gray-200 border border-gray-300 rounded px-3 py-2 text-gray-700 text-sm capitalize">
                      {relatorio.clima}
                    </div>
                 </div>
                 <div>
                    <label className="block text-sm font-medium text-gray-700 mb-1">Status</label>
-                   <div className="bg-gray-100 border border-gray-300 rounded px-3 py-2 text-gray-700 text-sm">
+                   <div className="bg-gray-200 border border-gray-300 rounded px-3 py-2 text-gray-700 text-sm">
                      {relatorio.status}
                    </div>
                 </div>
@@ -79,7 +78,7 @@ export default function RelatorioDetalhesModal({ isOpen, onClose, relatorio, onA
 
           {/* Lado Direito (Foto) */}
           <div className="flex flex-col gap-4">
-              <div className="flex-1 bg-gray-100 border-2 border-dashed border-gray-300 rounded-lg flex items-center justify-center min-h-[200px] overflow-hidden relative group">
+              <div className="flex-1 bg-gray-200 border-2 border-dashed border-gray-300 rounded-lg flex items-center justify-center min-h-[200px] overflow-hidden relative group">
                  {/* Usando campo 'imagemUrl' */}
                  {relatorio.imagemUrl ? (
                    <img src={relatorio.imagemUrl} alt="Evidência" className="w-full h-full object-cover absolute inset-0" />

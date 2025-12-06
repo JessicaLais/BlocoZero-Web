@@ -11,6 +11,7 @@ import { EstoqueObra } from "../pages/Estoque";
 import { CronogramaSelecao } from "../features/gestor/componentes/cronograma/CronogramaList.tsx";
 import { OrcamentoSelecao } from "../features/gestor/componentes/orçamento/OrcamentoSelecao.tsx";
 import { EstoqueSelecao } from "../features/gestor/componentes/estoque-tabela/EstoqueSelecao.tsx";
+import { RelatoriosGestorList } from "../features/gestor/componentes/Relatorios/RelatoriosGestorList.tsx";
 import { FinanceiroSelecao } from "../features/financeiro/FinanceiroSelecao.tsx";
 import { CadastroObra } from "../pages/CadastroObra";
 import { Orçamento } from "../pages/Orçamento";
@@ -45,6 +46,7 @@ function AppRoutes() {
                         <Route path="/financeiro" element={<FinanceiroSelecao/>} />
                         <Route path="/tabela-estoque" element={<EstoqueSelecao />} />
                         <Route path="/cronograma-fisico" element={<CronogramaSelecao />} />
+                        <Route path="/relatorios-gestor" element={<RelatoriosGestorList />} />
                         <Route path="/" element={<Navigate to="/cadastro-obra" />} />
                     </>
                 )}

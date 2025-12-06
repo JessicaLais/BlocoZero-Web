@@ -75,12 +75,12 @@ const sidebarLinks: SidebarLink[] = [
         icon: images.Relatorios,
         roles: ['manager']
     },
-    /* {
+     {
         label: 'Dashboards',
-        to: '#', 
+        to: 'relatorios-gestor', 
         icon: images.Dashboards,
         roles: ['manager']
-    }*/
+    }
 ];
 
 export function Sidebar() {
