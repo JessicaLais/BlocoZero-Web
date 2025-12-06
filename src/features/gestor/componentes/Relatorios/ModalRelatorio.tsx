@@ -1,12 +1,10 @@
 import { FiX, FiCheck, FiXCircle, FiImage, FiCalendar } from "react-icons/fi";
-
-// ✅ 3. Importando a interface CERTA (Correção do erro de TypeScript)
 import type { RelatorioDetalhado } from "./TabelaRelatorios"; 
 
 interface ModalProps {
   isOpen: boolean;
   onClose: () => void;
-  relatorio: RelatorioDetalhado | null; // Tipagem atualizada
+  relatorio: RelatorioDetalhado | null; 
   onAprovar: () => void;
   onRecusar: () => void;
 }
@@ -15,7 +13,7 @@ export default function RelatorioDetalhesModal({ isOpen, onClose, relatorio, onA
   if (!isOpen || !relatorio) return null;
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4 backdrop-blur-sm">
+    <div className="fixed inset-0 bg-gray-200 bg-opacity-50 z-50 flex items-center justify-center p-4 backdrop-blur-sm">
       <div className="bg-white rounded-lg shadow-xl w-full max-w-4xl max-h-[90vh] overflow-y-auto flex flex-col animate-fade-in-up">
         
         {/* Header */}
@@ -78,7 +76,7 @@ export default function RelatorioDetalhesModal({ isOpen, onClose, relatorio, onA
 
           {/* Lado Direito (Foto) */}
           <div className="flex flex-col gap-4">
-              <div className="flex-1 bg-gray-200 border-2 border-dashed border-gray-300 rounded-lg flex items-center justify-center min-h-[200px] overflow-hidden relative group">
+              <div className="flex-1 bg-gray-100 border-2 border-dashed border-gray-300 rounded-lg flex items-center justify-center min-h-[200px] overflow-hidden relative group">
                  {/* Usando campo 'imagemUrl' */}
                  {relatorio.imagemUrl ? (
                    <img src={relatorio.imagemUrl} alt="Evidência" className="w-full h-full object-cover absolute inset-0" />

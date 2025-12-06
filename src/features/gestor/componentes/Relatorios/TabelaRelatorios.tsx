@@ -1,266 +1,213 @@
 import { useState, useMemo, useEffect } from "react";
 import { Clock, CheckCircle, XCircle, Eye, Search, Image as ImageIcon } from "lucide-react";
-import { api } from "../../../../services/api"; 
+import { api } from "../../../../services/api"; // Verifique se o caminho da api está certo
 import RelatorioDetalhesModal from "./ModalRelatorio"; 
 
-// ✅ Interface ajustada para o nome real que veio no seu console
-interface BackendReport {
-    id_progressSubstageReport?: number; // O CAMPO CORRETO DO ID
-    id_progressReport?: number;         // Mantido por garantia
-    id?: number;
-    id_work?: number;
-    id_stage?: number;
-    id_substage?: number; 
-    title?: string;
-    reportVersion?: string;
-    createdAt?: string; 
-    weather?: string;
-    startDate?: string;
-    endDate?: string;
-    note?: string;
-    status?: string; 
-    completionPercentage?: number | string; 
-    photo?: string; 
-    work?: { name: string };
-}
-
+// ✅ Interface unificada
 export interface RelatorioDetalhado {
-    id: string;
-    data: string;
-    nomeObra: string;
-    status: 'PENDING' | 'VALIDATED' | 'REFUSED';
-    etapa: string;
-    subetapa: string;
-    clima: string;
-    inicio: string;
-    fim: string;
-    percentual: number;
-    observacoes: string;
-    imagemUrl?: string;
-    titulo?: string;
+  id: string;
+  data: string;
+  nomeObra: string;
+  status: 'PENDING' | 'valid' | 'invalid'; // O frontend trabalha APENAS com esses valores
+  
+  etapa: string;
+  subetapa: string;
+  clima: string;
+  inicio: string;
+  fim: string;
+  percentual: number;
+  observacoes: string;
+  imagemUrl?: string;
 }
 
 interface TabelaRelatoriosProps {
-    workId?: string;
+  workId?: string;
 }
 
 export default function TabelaRelatorios({ workId }: TabelaRelatoriosProps) {
-    const statusMap: Record<string, 'PENDING' | 'VALIDATED' | 'REFUSED'> = {
-        'PENDENTE': 'PENDING',
-        'PENDING': 'PENDING',
-        'APROVADO': 'VALIDATED',
-        'VALIDATED': 'VALIDATED',
-        'INVALIDO': 'REFUSED',
-        'REFUSED': 'REFUSED'
-    };
+  const [activeTab, setActiveTab] = useState<'PENDING' | 'valid' | 'invalid'>('PENDING');
+  const [search, setSearch] = useState("");
+  const [relatorios, setRelatorios] = useState<RelatorioDetalhado[]>([]);
+  const [loading, setLoading] = useState(false);
 
-    const [activeTab, setActiveTab] = useState<'PENDING' | 'VALIDATED' | 'REFUSED'>('PENDING');
-    const [search, setSearch] = useState("");
-    const [relatorios, setRelatorios] = useState<RelatorioDetalhado[]>([]);
-    const [loading, setLoading] = useState(false);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [selectedRelatorio, setSelectedRelatorio] = useState<RelatorioDetalhado | null>(null);
 
-    const [isModalOpen, setIsModalOpen] = useState(false);
-    const [selectedRelatorio, setSelectedRelatorio] = useState<RelatorioDetalhado | null>(null);
+  // --- BUSCAR DADOS (GET) ---
+  useEffect(() => {
+    async function loadData() {
+      if (!workId) return;
 
-    useEffect(() => {
-        if (!workId) {
-            setRelatorios([]);
-            return;
-        }
+      try {
+        setLoading(true);
+        // Busca a lista do backend
+        const response = await api.get(`/progressReport/list/${workId}`);
+        const dadosBrutos = response.data.progressReports || [];
 
-        const idNumber = Number(workId);
-        if (isNaN(idNumber) || idNumber <= 0) {
-            console.warn("ID da obra inválido:", workId);
-            return;
-        }
+        console.log("Dados brutos do banco:", dadosBrutos);
 
-        async function loadData() {
-            try {
-                setLoading(true);
-                const urlRequest = `/progressReport/list/${idNumber}`;
-                
-                const response = await api.get(urlRequest);
-                const dadosBrutos: BackendReport[] = response.data.progressReports || [];
-                
-                // console.log("Dados recebidos:", dadosBrutos); 
+        // ✅ 2. ADAPTER: Converte o que vem do Banco -> Formato do Front
+        const dadosAdaptados: RelatorioDetalhado[] = dadosBrutos.map((item: any) => {
+          
+          // Tratamento da Imagem Base64
+          let fotoTratada = null;
+          if (item.photo) {
+             fotoTratada = item.photo.startsWith('data:') 
+                ? item.photo 
+                : `data:image/jpeg;base64,${item.photo}`;
+          }
 
-                const dadosAdaptados: RelatorioDetalhado[] = dadosBrutos.map((item) => {
-                    
-                    // 1. Tratamento da Imagem
-                    let fotoTratada = undefined;
-                    if (item.photo) {
-                        fotoTratada = item.photo.startsWith('data:') 
-                            ? item.photo 
-                            : `data:image/jpeg;base64,${item.photo}`;
-                    }
-                    
-                    // 2. Tratamento do Status
-                    const statusBackend = item.status || 'PENDENTE';
-                    const statusFrontend = statusMap[statusBackend] || 'PENDING';
+          // 🔥 CORREÇÃO DO STATUS (Normalização) 🔥
+          // O banco pode mandar 'PENDENTE', 'Pending', 'valid', etc.
+          // Aqui garantimos que vire apenas: 'PENDING', 'valid' ou 'invalid'
+          let statusNormalizado: 'PENDING' | 'valid' | 'invalid' = 'PENDING';
+          
+          const rawStatus = item.status ? item.status.toString().toLowerCase() : '';
 
-                    // ✅ 3. CORREÇÃO PRINCIPAL: Pegando o ID correto
-                    const safeId = 
-                        item.id_progressSubstageReport?.toString() || // Prioridade 1: O nome que vimos no console
-                        item.id_progressReport?.toString() || 
-                        item.id?.toString() || 
-                        `temp-${Math.random()}`;
+          if (rawStatus === 'valid') {
+              statusNormalizado = 'valid';
+          } else if (rawStatus === 'invalid' || rawStatus === 'recusado') {
+              statusNormalizado = 'invalid';
+          } else if (rawStatus === 'pendente' || rawStatus === 'pending') {
+              statusNormalizado = 'PENDING';
+          }
 
-                    return {
-                        id: safeId,
-                        data: item.createdAt || item.startDate || new Date().toISOString(),        
-                        nomeObra: item.work?.name || "Obra",
-                        status: statusFrontend,
-                        
-                        etapa: item.id_stage?.toString() || "-",
-                        subetapa: item.id_substage?.toString() || "-",
-                        
-                        clima: item.weather || "-",
-                        inicio: item.startDate || "",
-                        fim: item.endDate || "",
-                        percentual: Number(item.completionPercentage) || 0,
-                        
-                        observacoes: item.note || "", 
-                        titulo: item.title || "",
-                        imagemUrl: fotoTratada
-                    };
-                });
-
-                setRelatorios(dadosAdaptados);
-
-            } catch (error: any) {
-                console.error("Erro ao buscar relatórios:", error);
-            } finally {
-                setLoading(false);
-            }
-        }
-
-        loadData();
-    }, [workId]);
-
-    const handleAprovar = async () => {
-        if (!selectedRelatorio) return;
-        try {
-            // Agora selectedRelatorio.id será "1" (o ID real), então a URL ficará correta
-            await api.patch(`/progressReport/review/${selectedRelatorio.id}`, {
-                status: 'APROVADO', 
-                reason: 'Aprovado pelo gestor' 
-            });
+          return {
+            id: item.id_progressSubstageReport?.toString(),
+            data: item.startDate,        
+            nomeObra: item.work?.name || "Obra Atual",
             
-            setRelatorios(prev => prev.map(r => 
-                r.id === selectedRelatorio.id ? { ...r, status: 'VALIDATED' } : r
-            ));
-            setIsModalOpen(false);
-        } catch (err) { 
-            console.error(err);
-            alert("Erro ao validar. Verifique o console."); 
-        }
-    };
-
-    const handleRecusar = async () => {
-        if (!selectedRelatorio) return;
-        const motivo = prompt("Qual o motivo da recusa?");
-        if (!motivo) return;
-
-        try {
-            await api.patch(`/progressReport/review/${selectedRelatorio.id}`, {
-                status: 'INVALIDO', 
-                reason: motivo
-            });
-
-            setRelatorios(prev => prev.map(r => 
-                r.id === selectedRelatorio.id ? { ...r, status: 'REFUSED' } : r
-            ));
-            setIsModalOpen(false);
-        } catch (err) { 
-            console.error(err);
-            alert("Erro ao recusar."); 
-        }
-    };
-
-    const listaFiltrada = useMemo(() => {
-        return relatorios.filter(r => {
-            const matchesTab = r.status === activeTab;
-            const term = search.toLowerCase();
-            const matchesSearch = 
-                (r.observacoes && r.observacoes.toLowerCase().includes(term)) || 
-                (r.etapa && r.etapa.toLowerCase().includes(term)) ||
-                (r.titulo && r.titulo?.toLowerCase().includes(term));
+            // Usamos o status corrigido aqui
+            status: statusNormalizado,
             
-            return matchesTab && matchesSearch;
+            etapa: item.id_stage?.toString() || "-",
+            subetapa: item.id_substage?.toString() || "-",
+            clima: item.weather || "Não informado",
+            
+            inicio: item.startDate,
+            fim: item.endDate,
+            percentual: Number(item.completionPercentage) || 0,
+            
+            observacoes: item.notes || "",
+            imagemUrl: fotoTratada
+          };
         });
-    }, [relatorios, activeTab, search]);
 
-    const formatDate = (dateStr?: string) => {
-        if(!dateStr) return "-";
-        try {
-            return new Date(dateStr).toLocaleDateString('pt-BR');
-        } catch (e) {
-            return dateStr;
-        }
+        setRelatorios(dadosAdaptados);
+
+      } catch (error) {
+        console.error("Erro ao buscar relatórios:", error);
+      } finally {
+        setLoading(false);
+      }
     }
 
-    return (
-        <div className="bg-white rounded-lg shadow-md border border-[#c4c4c4] flex flex-col w-full h-[440px]">
-            {/* Header / Tabs */}
-            <div className="p-4 border-b border-gray-200 bg-gray-50 flex justify-between items-center">
-                <div className="flex bg-gray-200 p-1 rounded-lg">
-                    <button onClick={() => setActiveTab('PENDING')} className={`px-4 py-2 rounded text-sm font-medium flex gap-2 ${activeTab === 'PENDING' ? 'bg-white shadow text-gray-800' : 'text-gray-500'}`}><Clock size={16}/> Pendente</button>
-                    <button onClick={() => setActiveTab('VALIDATED')} className={`px-4 py-2 rounded text-sm font-medium flex gap-2 ${activeTab === 'VALIDATED' ? 'bg-white shadow text-green-600' : 'text-gray-500'}`}><CheckCircle size={16}/> Validado</button>
-                    <button onClick={() => setActiveTab('REFUSED')} className={`px-4 py-2 rounded text-sm font-medium flex gap-2 ${activeTab === 'REFUSED' ? 'bg-white shadow text-red-600' : 'text-gray-500'}`}><XCircle size={16}/> Recusado</button>
-                </div>
-                <div className="relative w-64">
-                    <input type="text" placeholder="Buscar..." value={search} onChange={e => setSearch(e.target.value)} className="w-full pl-10 pr-4 py-2 border rounded-lg text-sm outline-none focus:border-[#607D8B]" />
-                    <Search size={16} className="absolute left-3 top-2.5 text-gray-400" />
-                </div>
-            </div>
+    loadData();
+  }, [workId]);
 
-            {/* Lista */}
-            <div className="flex-1 overflow-y-auto p-2">
-                {loading && <div className="text-center py-10 text-gray-500">Carregando...</div>}
-                
-                {!loading && listaFiltrada.length === 0 && (
-                    <div className="text-center py-10 text-gray-400 flex flex-col items-center gap-2">
-                        <Search size={32} className="opacity-20"/>
-                        Nenhum relatório encontrado.
-                    </div>
-                )}
+  // --- AÇÕES ---
+  const handleAprovar = async () => {
+    if (!selectedRelatorio) return;
+    
+    try {
+      await api.put(`/progressReport/review/${selectedRelatorio.id}`, {
+        status: 'valid' 
+      });
+      // Atualiza o estado localmente para refletir a mudança sem recarregar tudo
+      setRelatorios(prev => prev.map(r => r.id === selectedRelatorio.id ? { ...r, status: 'valid' } : r));
+      setIsModalOpen(false);
+    } catch (err) { alert("Erro ao validar."); }
+  };
 
-                {listaFiltrada.map(rel => (
-                    <div key={rel.id} className="flex justify-between items-center p-4 border-b hover:bg-gray-50 bg-white rounded mb-2 shadow-sm border border-gray-200 transition-colors">
-                        <div className="flex items-center gap-4">
-                            <span className="text-xs font-bold bg-gray-200 border px-2 py-1 rounded text-gray-600 min-w-[80px] text-center">
-                                {formatDate(rel.data)}
-                            </span>
-                            <div>
-                                <p className="font-semibold text-gray-700 text-sm">
-                                    {rel.titulo ? rel.titulo : `Etapa: ${rel.etapa}`}
-                                </p>
-                                <span className="text-xs text-gray-400 capitalize flex items-center gap-1">
-                                    {rel.clima} • {rel.percentual}%
-                                </span>
-                            </div>
-                        </div>
-                        <div className="flex items-center gap-3">
-                            {rel.imagemUrl && <ImageIcon size={16} className="text-blue-400" />}
-                            <button 
-                                onClick={() => { setSelectedRelatorio(rel); setIsModalOpen(true); }} 
-                                className="p-2 hover:bg-gray-200 rounded-full transition-colors"
-                                title="Ver detalhes"
-                            >
-                                <Eye size={16} className="text-gray-600" />
-                            </button>
-                        </div>
-                    </div>
-                ))}
-            </div>
+  const handleRecusar = async () => {
+    if (!selectedRelatorio) return;
+    const motivo = prompt("Qual o motivo da recusa?");
+    if (!motivo) return;
 
-            <RelatorioDetalhesModal 
-                isOpen={isModalOpen}
-                onClose={() => setIsModalOpen(false)}
-                relatorio={selectedRelatorio} 
-                onAprovar={handleAprovar}
-                onRecusar={handleRecusar}
-            />
+    try {
+      await api.put(`/progressReport/review/${selectedRelatorio.id}`, {
+        status: 'invalid',
+        managerRejectionReason: motivo
+      });
+
+      // Atualiza o estado localmente
+      setRelatorios(prev => prev.map(r => r.id === selectedRelatorio.id ? { ...r, status: 'invalid' } : r));
+      setIsModalOpen(false);
+    } catch (err) {
+      console.error("Erro ao recusar:", err);
+    }
+  };
+
+  // --- FILTROS ---
+  const listaFiltrada = useMemo(() => {
+    return relatorios.filter(r => {
+      // Agora r.status sempre será compatível com activeTab
+      const matchesTab = r.status === activeTab;
+      
+      const term = search.toLowerCase();
+      // Proteção contra valores nulos em observacoes ou etapa
+      const obs = r.observacoes ? r.observacoes.toLowerCase() : '';
+      const etp = r.etapa ? r.etapa.toLowerCase() : '';
+      
+      const matchesSearch = obs.includes(term) || etp.includes(term);
+      
+      return matchesTab && matchesSearch;
+    });
+  }, [relatorios, activeTab, search]);
+
+  const formatDate = (dateStr?: string) => {
+    if(!dateStr) return "-";
+    return new Date(dateStr).toLocaleDateString('pt-BR');
+  }
+
+  return (
+    <div className="bg-white rounded-lg shadow-md border border-[#c4c4c4] flex flex-col w-full h-[426px]">
+      {/* Header */}
+      <div className="p-4 border-b border-gray-200 bg-gray-50 flex justify-between items-center">
+        <div className="flex bg-gray-200 p-1 rounded-lg">
+           <button onClick={() => setActiveTab('PENDING')} className={`px-4 py-2 rounded text-sm font-medium flex gap-2 ${activeTab === 'PENDING' ? 'bg-white shadow text-gray-800' : 'text-gray-500'}`}><Clock size={16}/> Pendente</button>
+           <button onClick={() => setActiveTab('valid')} className={`px-4 py-2 rounded text-sm font-medium flex gap-2 ${activeTab === 'valid' ? 'bg-white shadow text-green-600' : 'text-gray-500'}`}><CheckCircle size={16}/> Validado</button>
+           <button onClick={() => setActiveTab('invalid')} className={`px-4 py-2 rounded text-sm font-medium flex gap-2 ${activeTab === 'invalid' ? 'bg-white shadow text-red-600' : 'text-gray-500'}`}><XCircle size={16}/> Recusado</button>
         </div>
-    );
+        <div className="relative w-64">
+           <input type="text" placeholder="Buscar..." value={search} onChange={e => setSearch(e.target.value)} className="w-full pl-10 pr-4 py-2 border rounded-lg text-sm outline-none focus:border-[#607D8B]" />
+           <Search size={16} className="absolute left-3 top-2.5 text-gray-400" />
+        </div>
+      </div>
+
+      {/* Lista */}
+      <div className="flex-1 overflow-y-auto p-2">
+        {loading && <div className="text-center py-10 text-gray-500">Carregando...</div>}
+        {!loading && listaFiltrada.length === 0 && <div className="text-center py-10 text-gray-400">Nenhum relatório encontrado.</div>}
+
+        {listaFiltrada.map(rel => (
+          <div key={rel.id} className="flex justify-between items-center p-4 border-b hover:bg-gray-50 bg-white rounded mb-2 shadow-sm border-gray-200 border-2">
+            <div className="flex items-center gap-4">
+               <span className="text-xs font-bold bg-gray-200 border px-2 py-1 rounded text-gray-600">
+                 {formatDate(rel.data)}
+               </span>
+               <div>
+                 <p className="font-semibold text-gray-700 text-sm">Etapa: {rel.etapa} - Sub: {rel.subetapa}</p>
+                 <span className="text-xs text-gray-400 capitalize">{rel.clima}</span>
+               </div>
+            </div>
+            <div className="flex items-center gap-3">
+                {rel.imagemUrl && <ImageIcon size={16} className="text-blue-400" />}
+                <button onClick={() => { setSelectedRelatorio(rel); setIsModalOpen(true); }} className="p-2 hover:bg-gray-200 rounded-full">
+                    <Eye size={16} className="text-gray-600" />
+                </button>
+            </div>
+          </div>
+        ))}
+      </div>
+
+      <RelatorioDetalhesModal 
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+        relatorio={selectedRelatorio} 
+        onAprovar={handleAprovar}
+        onRecusar={handleRecusar}
+      />
+    </div>
+  );
 }
