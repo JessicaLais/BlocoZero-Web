@@ -1,4 +1,5 @@
 import { useState, useEffect, useMemo } from 'react';
+import { useParams } from 'react-router-dom';
 import IconePesquisa from '../assets/search-icon.svg';
 import IconeDinheiro from '../assets/money-icon.svg';
 
@@ -10,11 +11,12 @@ import { financeiroService } from '../services/financeiroService';
 import type { RelatorioFinanceiroDTO } from '../dtos/financeiro';
 
 export function Fin() {
+  // O nome aqui deve ser EXATAMENTE igual ao definido na rota: /obra/:work_id/financeiro
+  const { work_id } = useParams(); 
+
   const [searchTerm, setSearchTerm] = useState("");
   const [loading, setLoading] = useState(true);
   const [relatorio, setRelatorio] = useState<RelatorioFinanceiroDTO | null>(null);
-
-  const WORK_ID = 1; 
 
   const formatarValor = (valor: string | number | undefined) => {
     if (!valor) return "R$ 0,00";
@@ -25,9 +27,18 @@ export function Fin() {
   // --- 1. BUSCA DE DADOS ---
   useEffect(() => {
     const carregarDados = async () => {
+      // Se não tiver work_id na URL (undefined), paramos e avisamos no console
+      if (!work_id) {
+        console.warn("Nenhum ID de obra (work_id) encontrado na URL.");
+        setLoading(false);
+        return;
+      }
+
       try {
         setLoading(true);
-        const dados = await financeiroService.getRelatorio(WORK_ID);
+        // O service espera um number, então convertemos o parâmetro da URL
+        const idNumerico = Number(work_id); 
+        const dados = await financeiroService.getRelatorio(idNumerico);
         setRelatorio(dados);
       } catch (error) {
         console.error("Erro ao carregar tabela:", error);
@@ -35,9 +46,11 @@ export function Fin() {
         setLoading(false);
       }
     };
+    
     carregarDados();
-  }, []);
+  }, [work_id]); // Recarrega sempre que o work_id mudar
 
+  // --- 2. PREPARAÇÃO DOS DADOS (MEMO) ---
   const headers = useMemo(() => {
     if (!relatorio || !relatorio.tabela_dados || relatorio.tabela_dados.length === 0) return [];
     return relatorio.tabela_dados[0].cronograma_financeiro.map(c => c.mes);
@@ -89,30 +102,41 @@ export function Fin() {
   }, [relatorio]);
 
 
+  // --- 3. RENDERIZAÇÃO ---
+
   if (loading) {
     return <div className="min-h-screen bg-[#F5F5F5] p-8 flex items-center justify-center">Carregando relatório...</div>;
   }
 
+  // Se terminou de carregar e o work_id não existe ou o relatório falhou
+  if (!work_id || !relatorio) {
+    return (
+        <div className="min-h-screen bg-[#F5F5F5] p-8 flex items-center justify-center text-gray-500">
+            {!work_id ? "Obra não selecionada (URL inválida)." : "Não foi possível carregar os dados desta obra."}
+        </div>
+    );
+  }
+
   return (
-    <div className="min-h-screen bg-[#F5F5F5] p-4 md:p-8 overflow-x-hidden">
-      <main className="w-full max-w-[1600px] mx-auto">
+    <div className="h-screen bg-[#F5F5F5] p-4 md:p-6 overflow-hidden">
+      <main className="w-full max-w-full min-w-0">
         
-        {/* HEADER */}
-        <section className="flex flex-col md:flex-row items-end justify-start gap-4 mb-8 flex-wrap">
-          <div className="flex gap-4 md:gap-6 overflow-x-auto pb-2 max-w-full">
+        {/* HEADER: Cards de Resumo */}
+        <section className="flex flex-col md:flex-row items-end justify-start gap-4 mb-4 flex-wrap">
+          <div className="flex gap-4 md:gap-6 max-w-full">
              <InfoCard 
                 title="Valor do contrato" 
-                value={formatarValor(relatorio?.resumo?.valor_contrato)} 
+                value={formatarValor(relatorio.resumo?.valor_contrato)} 
                 icon={<img src={IconeDinheiro} alt="Dinheiro" className="w-12 h-12" />} 
              />
              <InfoCard 
                 title="Total Acumulado" 
-                value={formatarValor(relatorio?.resumo?.total_acumulado_obra)} 
+                value={formatarValor(relatorio.resumo?.total_acumulado_obra)} 
                 icon={<img src={IconeDinheiro} alt="Dinheiro" className="w-12 h-12" />} 
              />
              <InfoCard 
                 title="Disponível" 
-                value={formatarValor(relatorio?.resumo?.valor_disponivel)} 
+                value={formatarValor(relatorio.resumo?.valor_disponivel)} 
                 icon={<img src={IconeDinheiro} alt="Dinheiro" className="w-12 h-12" />} 
              />
           </div>
@@ -132,8 +156,8 @@ export function Fin() {
         </section>
 
         {/* TABELA PRINCIPAL */}
-        <section className="border border-gray-300 rounded-lg overflow-hidden shadow-sm bg-white">
-          <div className="overflow-x-auto">
+        <section className="border border-gray-300 rounded-lg overflow-x-scroll md:w-[1120px]  2xl:w-[1480px] shadow-sm bg-white">
+          <div>
             <table className="w-full text-left border-collapse">
               <thead className="bg-white border-b border-gray-300">
                 <tr>
@@ -163,7 +187,7 @@ export function Fin() {
                 ) : (
                   <tr>
                     <td colSpan={headers.length > 0 ? headers.length + 2 : 2} className="p-8 text-center text-gray-500">
-                      {searchTerm ? "Nenhuma etapa encontrada com esse nome." : "Nenhum dado financeiro disponível."}
+                      {searchTerm ? "Nenhuma etapa encontrada com esse nome." : "Nenhum dado disponível."}
                     </td>
                   </tr>
                 )}
@@ -173,7 +197,7 @@ export function Fin() {
         </section>
 
         {/* TOTAIS (RODAPÉ) */}
-        <section className="mt-6 w-full overflow-x-auto">
+        <section className="mt-4 md:w-[1120px] 2xl:w-[1480px] overflow-x-scroll">
           <TotalsTable 
             mesesLabels={headers}
             totaisMensais={totaisMensais}

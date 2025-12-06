@@ -1,76 +1,80 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
+import { useNavigate } from "react-router-dom";
+import { Plus, ArrowLeft } from "lucide-react"; // Opcional: ícones para o botão
+
+// Componentes
 import { FormCadastroObra } from "../features/gestor/componentes/cadastroMateriais/FormCadastroObra";
-import { SessionItem, type SessionItemProps } from "../features/home/components/Session";
-import { api } from "../services/api";
-import { useNavigate } from "react-router-dom"; 
+import { ListaSelecaoObra } from "../shared/ListaSelecaoObra";
 
 export function CadastroObra() {
     const navigate = useNavigate();
-    const [works, setWorks] = useState<SessionItemProps[]>([]);
     
-    // Defina o ID da empresa aqui (ou pegue do contexto de autenticação/login)
-    const ENTERPRISE_ID = 1; 
+    // Estado para alternar entre Lista e Formulário
+    const [showForm, setShowForm] = useState(false);
 
-    async function fetchWorks() {
-        try {
-            // CORREÇÃO AQUI: Adicionado o ID da empresa na URL
-            const response = await api.get(`/work/list/${ENTERPRISE_ID}`); 
-            
-            console.log("Dados recebidos:", response.data); // Para debug
-
-            // Verificação de segurança caso o backend retorne objeto ou array
-            const data = response.data;
-            if (Array.isArray(data)) {
-                setWorks(data);
-            } else if (data.works && Array.isArray(data.works)) {
-                setWorks(data.works);
-            } else {
-                setWorks([]); 
-            }
-        } catch (error) {
-            console.error("Erro ao buscar obras", error);
-            // Se quiser manter os dados falsos para teste enquanto arruma o back:
-            // setWorks([... dados falsos ...]);
-        }
-    }
-
-    useEffect(() => {
-        fetchWorks();
-    }, []);
-
+    // Função chamada quando clica em um item da lista
     function handleSelectWork(id: string) {
         navigate(`/obras/${id}`);
     }
 
+    // Função chamada quando o formulário salva com sucesso
+    const handleFormSuccess = () => {
+        // Apenas fechar o formulário é suficiente. 
+        // Quando a ListaSelecaoObra for renderizada novamente, 
+        // o useEffect dela rodará e buscará os dados atualizados.
+        setShowForm(false);
+    };
+
     return (
-        <div className="flex flex-col h-screen overflow-hidden bg-white p-2">
-            {/* Parte Superior: Formulário (Sem alterações) */}
-            <div className="py-2 bg-white border-1 border-gray-300 rounded-lg mb-2">
-                <h1 className="text-2xl font-bold ml-5 text-gray-800">Criar Obra</h1>
-                <FormCadastroObra onSuccess={fetchWorks} />
+        <div className="h-screen bg-[#F5F5F5] p-4 md:p-2 overflow-hidden">
+            
+            {/* CABEÇALHO DA PÁGINA */}
+            {/* Centralizado e com largura máxima para alinhar visualmente com o componente de lista */}
+            <div className="flex flex-col md:flex-row justify-end items-center  max-w-[768px] mx-auto w-full gap-4">
+                
+
+                {/* BOTÃO DE ALTERNÂNCIA (TOGGLE) */}
+                <button
+                    onClick={() => setShowForm(!showForm)}
+                    className={`flex items-center gap-2 px-4 py-2.5 rounded-lg font-medium transition-all shadow-sm ${
+                        showForm 
+                        ? "bg-white text-gray-700 border border-gray-300 hover:bg-gray-50" 
+                        : "bg-green-400 text-white hover:bg-green-350 hover:shadow-md"      
+                    }`}
+                >
+                    {showForm ? (
+                        <>
+                            <ArrowLeft size={20} /> Voltar para Lista
+                        </>
+                    ) : (
+                        <>
+                            <Plus size={20} /> Cadastrar Nova Obra
+                        </>
+                    )}
+                </button>
             </div>
 
-            {/* Parte Inferior: Lista de Obras */}
-            <div className="flex flex-col items-center justify-center">
-                <div className="flex flex-col gap-1 max-h-[220px] w-[720px] border-1 border-gray-300 rounded-lg overflow-y-scroll ">
-                    <h2 className="text-xl font-semibold p-2 text-gray-700">Obras Registradas</h2>
-                    <div className="p-2 flex-col gap-2">
-                        {works.length > 0 ? (
-                            works.map((work) => (
-                                <SessionItem 
-                                    key={work.id_work} 
-                                    data={work} 
-                                    onClick={() => handleSelectWork(work.id_work)}
-                                />
-                            ))
-                        ) : (
-                            <p className="text-gray-500 italic">Nenhuma obra encontrada para esta empresa.</p>
-                        )}
+            {/* ÁREA DE CONTEÚDO */}
+            <div className="w-full flex justify-center">
+                
+                {showForm ? (
+                    // --- MODO FORMULÁRIO ---
+                    <div className="w-full  bg-white border border-gray-300 rounded-xl p-6 shadow-lg animate-in fade-in slide-in-from-bottom-4 duration-300">
+                        <FormCadastroObra onSuccess={handleFormSuccess} />
                     </div>
+                ) : (
+                    // --- MODO LISTAGEM (Componente Shared) ---
+                    // O componente ListaSelecaoObra já possui seu próprio container e estilos,
+                    // então apenas passamos as props necessárias.
+                    <div className="w-full animate-in fade-in duration-300">
+                        <ListaSelecaoObra 
+                            title="Obras Registradas"
+                            onSelect={handleSelectWork}
+                        />
+                    </div>
+                )}
 
-                </div>
             </div>
         </div>
-    )
-
+    );
 }

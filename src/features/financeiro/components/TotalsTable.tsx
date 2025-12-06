@@ -13,8 +13,8 @@ export function TotalsTable({ mesesLabels, totaisMensais, totaisAcumulados }: To
   const valueCell = `${commonCell} font-normal text-gray-700 text-center`;
 
   return (
-    <div className="min-w-full">
-      <table className="w-full text-xs border-separate border-spacing-0">
+    <div className="w-full">
+      <table className="text-xs border-separate border-spacing-0">
 
         <thead className="invisible h-0">
           <tr>

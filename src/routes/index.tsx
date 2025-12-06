@@ -19,10 +19,6 @@ import EstoqueTab from "../pages/EstoqueTabela";
 import { CronogramaPage } from "../pages/CronogramaFisico";
 import { GerenciarObra } from "../features/gestor/componentes/cadastroMateriais/GerenciarObra.tsx";
 import { Relatorios } from "../pages/Relatorios";
-
-import { RelatoriosDevolvidos } from "../pages/RelatoriosDevolvidos";
-
-
 function AppRoutes() {
     const { session } = useAuth();
 
@@ -31,44 +27,40 @@ function AppRoutes() {
         <Routes>
             <Route path="/" element={<AppLayout />}>
                 
-                {/* --- ROTAS DO MANAGER (Gestor) --- */}
                 {session?.userFunction === "manager" && (
                     <>
-                        {/* 1. Rotas Principais */}
                         <Route path="/cadastro-obra" element={<CadastroObra />} />
                         <Route path="/obras/:id" element={<GerenciarObra />} />
 
-                        {/* 2. Rotas Dinâmicas (Que esperam ID da Obra) */}
                         <Route path="/obra/:work_id/orcamento" element={<Orçamento />} />
                         <Route path="/obra/:work_id/financeiro" element={<Fin />} />
                         <Route path="/obra/:work_id/estoque" element={<EstoqueTab />} />
                         <Route path="/obra/:work_id/cronograma" element={<CronogramaPage />} />
+                        <Route path="/obra/:work_id/relatorios-gestor" element={<RelatoriosGestorPage />} />
 
-                        {/* 3. GAMBIARRA DE NAVEGAÇÃO (Sidebar Fixa -> Rota Dinâmica) */}
-                        {/* Isso faz os links da sua Sidebar atual funcionarem redirecionando para a Obra 1 */}
+                        
                         <Route path="/orcamento" element={<OrcamentoSelecao />} />
                         <Route path="/financeiro" element={<FinanceiroSelecao/>} />
                         <Route path="/tabela-estoque" element={<EstoqueSelecao />} />
                         <Route path="/cronograma-fisico" element={<CronogramaSelecao />} />
-                        {/* Rota Inicial do Manager */}
                         <Route path="/" element={<Navigate to="/cadastro-obra" />} />
                     </>
                 )}
 
-                {/* --- ROTAS DO TENDER (Encarregado) --- */}
                 {session?.userFunction === "tender" && (
                     <>
+
+                        <Route path="/obra/:work_id/cronograma" element={<CronogramaPage />} />
+
                         <Route path="/work" element={<Home />} />
                         <Route path="/work/specific/:id" element={<CardObra />} />
                         <Route path="/estoque" element={<EstoqueList />} />
                         <Route path="/estoque/:work_id" element={<EstoqueObra />} />
                         <Route path="/" element={<Navigate to="/work" />} />
                         <Route path="/relatorios" element={<Relatorios />} />
-                        <Route path="/relatorios-devolvidos" element={<RelatoriosDevolvidos />} />
                      </>
                 )}
 
-                {/* Fallback para rota não encontrada */}
                 <Route path="*" element={<Navigate to="/" />} />
             </Route>
         </Routes>

@@ -1,5 +1,5 @@
 import { useNavigate } from "react-router-dom";
-import { ListaSelecaoObra } from "../../../../shared/ListaSelecaoObra";// Certifique-se que o caminho está correto
+import { ListaSelecaoObra } from "../../../../shared/ListaSelecaoObra";
 
 export function CronogramaSelecao() {
     const navigate = useNavigate();
@@ -7,7 +7,7 @@ export function CronogramaSelecao() {
     return (
         <div className="overflow-hidden">
             <ListaSelecaoObra 
-                title="Cronogramas das Obra"
+                title="Cronogramas das Obras"
                 onSelect={(id) => navigate(`/obra/${id}/cronograma`)}
             />
         </div>
