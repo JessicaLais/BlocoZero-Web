@@ -54,7 +54,7 @@ function AppRoutes() {
                     <>
 
                         <Route path="/obra/:work_id/cronograma" element={<CronogramaPage />} />
-
+                        <Route path="/cronograma-fisico" element={<CronogramaSelecao />} />
                         <Route path="/work" element={<Home />} />
                         <Route path="/work/specific/:id" element={<CardObra />} />
                         <Route path="/estoque" element={<EstoqueList />} />
