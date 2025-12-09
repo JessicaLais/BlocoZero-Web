@@ -23,12 +23,11 @@ const stageSchema = z.object({
 });
 
 interface CronogramaPanelProps {
-    workId: string; // Recebe o ID da obra selecionada
+    workId: string; 
     onSelectStage: (id: number, name: string) => void;
 }
 
 export function EtapaPanel({ workId, onSelectStage }: CronogramaPanelProps) {
-    // REMOVIDO: const CURRENT_WORK_ID = 1; (Usaremos workId das props)
 
     const [isVisible, setIsVisible] = useState(false);
     const [stages, setStages] = useState<StageData[]>([]);
@@ -51,8 +50,7 @@ export function EtapaPanel({ workId, onSelectStage }: CronogramaPanelProps) {
             const response = await api.get(`/stage/list/${workId}`);
             
             if (response.data && response.data.stages) {
-                // REMOVIDO O FILTRO QUE APAGAVA TUDO
-                // O backend já filtrou, confiamos nele.
+
                 setStages(response.data.stages);
             } else if (Array.isArray(response.data)) {
                 setStages(response.data);
@@ -67,7 +65,6 @@ export function EtapaPanel({ workId, onSelectStage }: CronogramaPanelProps) {
         }
     };
 
-    // AJUSTE 2: Recarrega se mudar de obra
     useEffect(() => {
         fetchStages();
     }, [workId]);
@@ -89,7 +86,6 @@ export function EtapaPanel({ workId, onSelectStage }: CronogramaPanelProps) {
         if (item) {
             setFormData({
                 name: item.name,
-                // Mantém apenas a parte da data YYYY-MM-DD
                 expStartDate: item.expStartDate ? String(item.expStartDate).split('T')[0] : '',
                 expEndDate: item.expEndDate ? String(item.expEndDate).split('T')[0] : '',
             });
@@ -117,7 +113,6 @@ export function EtapaPanel({ workId, onSelectStage }: CronogramaPanelProps) {
         try {
             const data = stageSchema.parse(formData);
             
-            // Função para converter data para ISO (Backend precisa disso)
             const toISO = (dateStr: string) => {
                 if (!dateStr) return null;
                 return new Date(dateStr).toISOString();
@@ -127,10 +122,8 @@ export function EtapaPanel({ workId, onSelectStage }: CronogramaPanelProps) {
                 ...data, 
                 id_work: Number(workId), 
                 progress: 0, 
-                // Datas Obrigatórias em ISO
                 expStartDate: toISO(data.expStartDate),
                 expEndDate: toISO(data.expEndDate),
-                // Datas Opcionais como NULL
                 exeStartDate: null, 
                 exeEndDate: null
             };
@@ -160,7 +153,6 @@ export function EtapaPanel({ workId, onSelectStage }: CronogramaPanelProps) {
 
     return (
         <div className="overflow-y-scroll h-[350px] pb-4">
-            {/* ... O resto do seu JSX (HTML) permanece IGUAL ... */}
             {isVisible && (
                 <div className="w-full space-y-2 py-2 px-4 bg-white rounded-lg shadow-md mb-4 border border-gray-200">
                     <h3 className="text-sm font-bold text-gray-700 mb-2">

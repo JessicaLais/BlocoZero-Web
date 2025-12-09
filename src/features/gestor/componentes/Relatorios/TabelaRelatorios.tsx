@@ -33,23 +33,19 @@ export default function TabelaRelatorios({ workId }: TabelaRelatoriosProps) {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedRelatorio, setSelectedRelatorio] = useState<RelatorioDetalhado | null>(null);
 
-  // --- BUSCAR DADOS (GET) ---
   useEffect(() => {
     async function loadData() {
       if (!workId) return;
 
       try {
         setLoading(true);
-        // Busca a lista do backend
         const response = await api.get(`/progressReport/list/${workId}`);
         const dadosBrutos = response.data.progressReports || [];
 
         console.log("Dados brutos do banco:", dadosBrutos);
 
-        // ✅ 2. ADAPTER: Converte o que vem do Banco -> Formato do Front
         const dadosAdaptados: RelatorioDetalhado[] = dadosBrutos.map((item: any) => {
           
-          // Tratamento da Imagem Base64
           let fotoTratada = null;
           if (item.photo) {
              fotoTratada = item.photo.startsWith('data:') 
@@ -57,9 +53,7 @@ export default function TabelaRelatorios({ workId }: TabelaRelatoriosProps) {
                 : `data:image/jpeg;base64,${item.photo}`;
           }
 
-          // 🔥 CORREÇÃO DO STATUS (Normalização) 🔥
-          // O banco pode mandar 'PENDENTE', 'Pending', 'valid', etc.
-          // Aqui garantimos que vire apenas: 'PENDING', 'valid' ou 'invalid'
+
           let statusNormalizado: 'PENDING' | 'valid' | 'invalid' = 'PENDING';
           
           const rawStatus = item.status ? item.status.toString().toLowerCase() : '';
@@ -77,7 +71,6 @@ export default function TabelaRelatorios({ workId }: TabelaRelatoriosProps) {
             data: item.startDate,        
             nomeObra: item.work?.name || "Obra Atual",
             
-            // Usamos o status corrigido aqui
             status: statusNormalizado,
             
             etapa: item.id_stage?.toString() || "-",
@@ -105,7 +98,6 @@ export default function TabelaRelatorios({ workId }: TabelaRelatoriosProps) {
     loadData();
   }, [workId]);
 
-  // --- AÇÕES ---
   const handleAprovar = async () => {
     if (!selectedRelatorio) return;
     
@@ -113,7 +105,6 @@ export default function TabelaRelatorios({ workId }: TabelaRelatoriosProps) {
       await api.put(`/progressReport/review/${selectedRelatorio.id}`, {
         status: 'valid' 
       });
-      // Atualiza o estado localmente para refletir a mudança sem recarregar tudo
       setRelatorios(prev => prev.map(r => r.id === selectedRelatorio.id ? { ...r, status: 'valid' } : r));
       setIsModalOpen(false);
     } catch (err) { alert("Erro ao validar."); }
@@ -130,7 +121,6 @@ export default function TabelaRelatorios({ workId }: TabelaRelatoriosProps) {
         managerRejectionReason: motivo
       });
 
-      // Atualiza o estado localmente
       setRelatorios(prev => prev.map(r => r.id === selectedRelatorio.id ? { ...r, status: 'invalid' } : r));
       setIsModalOpen(false);
     } catch (err) {
@@ -138,14 +128,11 @@ export default function TabelaRelatorios({ workId }: TabelaRelatoriosProps) {
     }
   };
 
-  // --- FILTROS ---
   const listaFiltrada = useMemo(() => {
     return relatorios.filter(r => {
-      // Agora r.status sempre será compatível com activeTab
       const matchesTab = r.status === activeTab;
       
       const term = search.toLowerCase();
-      // Proteção contra valores nulos em observacoes ou etapa
       const obs = r.observacoes ? r.observacoes.toLowerCase() : '';
       const etp = r.etapa ? r.etapa.toLowerCase() : '';
       

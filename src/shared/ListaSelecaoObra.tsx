@@ -14,7 +14,6 @@ interface Props {
 export function ListaSelecaoObra({ title, onSelect }: Props) {
     const ENTERPRISE_ID = 1;
 
-    // Estados
     const [allWorks, setAllWorks] = useState<SessionItemProps[]>([]); 
     const [filteredWorks, setFilteredWorks] = useState<SessionItemProps[]>([]); 
     const [searchTerm, setSearchTerm] = useState("");

@@ -1,4 +1,3 @@
-// features/gestor/pages/GerenciarObra.tsx
 import { useParams, useNavigate } from "react-router-dom";
 import { AbasCadastroObra } from "./AbasCadastroObra";
 import { Button } from "../../../home/components/Button"; 

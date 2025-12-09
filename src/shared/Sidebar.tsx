@@ -132,7 +132,6 @@ export function Sidebar() {
                         .map(link => (
                             
                             !link.children ? (
-                                // --- ITEM SIMPLES ---
                                 <NavLink
                                     key={link.label}
                                     to={link.to}
@@ -150,7 +149,6 @@ export function Sidebar() {
                                     <span>{link.label}</span>
                                 </NavLink>
                             ) : (
-                                // --- ITEM COM DROPDOWN (Sem ícones de seta) ---
                                 <div key={link.label} className="relative">
                                     <button
                                         onClick={() => handleDropdownClick(link.label)}

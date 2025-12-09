@@ -1,6 +1,5 @@
 import { useState } from "react";
-import { Upload, X } from "lucide-react"; // Ou os ícones que você usa
-
+import { Upload, X } from "lucide-react"; 
 interface ImageUploadProps {
   onImageSelect: (file: File | null) => void;
 }
@@ -11,7 +10,6 @@ export function ImageUpload({ onImageSelect }: ImageUploadProps) {
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
-      // Passa o arquivo para o Pai (Relatorios.tsx)
       if (onImageSelect) onImageSelect(file);
       
       const objectUrl = URL.createObjectURL(file);
@@ -25,10 +23,8 @@ export function ImageUpload({ onImageSelect }: ImageUploadProps) {
   };
 
   return (
-    // ... (seu código visual do quadrado de upload) ...
-    // O importante é que no input type="file" tenha: onChange={handleFileChange}
+  
     <div className="w-full flex flex-col items-center gap-4">
-        {/* Exemplo simplificado da estrutura visual */}
         <div className="w-full h-64 border-2 border-dashed border-gray-300 rounded-lg flex items-center justify-center relative bg-gray-50">
              {preview ? (
                 <>

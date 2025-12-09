@@ -300,7 +300,7 @@ export function SubetapasPanel({ workId, selectedStage }: SubetapasPanelProps) {
 
             {isVisible && (
                 <div className="w-full py-2 px-4 bg-white rounded-lg shadow-md mb-2 border border-gray-200 text-sm">
-                    {/* ... campos ... */}
+                    
                     <div className="flex gap-4 mb-3">
                         <InputForm legend="Nome Subetapa:" name="name" value={formData.name} onChange={handleInputChange} containerClassName="w-1/3" />
                         <InputForm legend="Previsão Fim:" type="date" name="expDuration" value={formData.expDuration} onChange={handleInputChange} containerClassName="w-1/3" />
@@ -329,7 +329,6 @@ export function SubetapasPanel({ workId, selectedStage }: SubetapasPanelProps) {
                                 </div>
                             </div>
 
-                            {/* Alocar Materiais */}
                             <div className="mb-3 bg-gray-50 p-2 rounded border border-gray-200">
                                 <h5 className="font-semibold text-xs text-gray-500 mb-1">Alocar Materiais</h5>
                                 <div className="flex gap-2 items-end">
@@ -365,7 +364,6 @@ export function SubetapasPanel({ workId, selectedStage }: SubetapasPanelProps) {
                 </div>
             )}
 
-            {/* Botoes de Ação */}
             <div className="flex justify-end mt-2 gap-2">
                 <Button onClick={() => { setIsVisible(true); setSelectedId(null); setFormData({name:"", expDuration:"", progress: "0"}); setTempEmployees([]); setTempMaterials([]); }} className="flex gap-2 px-3 py-1 text-sm bg-gray-350 border border-gray-400 hover:bg-gray-300">
                     <img src={incluirSvg} className="w-4 h-4" /> Incluir
@@ -378,7 +376,6 @@ export function SubetapasPanel({ workId, selectedStage }: SubetapasPanelProps) {
                 </Button>
             </div>
 
-            {/* Tabela */}
             <table className="bg-white border border-gray-300 w-full text-left mt-2 text-sm">
                 <thead>
                     <tr className="bg-gray-300">

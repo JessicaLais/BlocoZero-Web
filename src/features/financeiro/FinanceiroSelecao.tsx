@@ -10,7 +10,7 @@ export function FinanceiroSelecao() {
                 title="Relatório das Obras"
                 
                 onSelect={(id) => {
-                    console.log("Navegando para obra:", id); // Teste
+                    console.log("Navegando para obra:", id); 
                     navigate(`/obra/${id}/financeiro`);
                 }}
             />

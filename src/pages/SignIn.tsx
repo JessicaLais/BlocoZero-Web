@@ -58,11 +58,9 @@ export function SignIn() {
         <div className="w-screen h-screen flex ">
             <div className="w-1/2 h-screen bg-blue-400 flex items-center justify-center">
                 
-                {/* 8. O <form> é atualizado */}
                 <form action={formAction} className='flex flex-col items-center justify-center gap-5 w-105 h-105 border-2 border-blue-400 bg-blue-400 drop-shadow-lg rounded-2xl  p-8 '>
                     <h1 className='text-white text-4xl font-semibold'>Conecte-se</h1>
                     
-                    {/* 9. Seus inputs agora usam 'name' em vez de 'onChange' */}
                     <InputAuth 
                         name="email" 
                         required 
@@ -80,14 +78,12 @@ export function SignIn() {
                         placeholder="Sua senha" 
                     />
 
-                    {/* 10. Exibição da mensagem de erro */}
                     {state?.message && (
                         <p className="text-sm text-red-100 text-center font-medium">
                             {state.message}
                         </p>
                     )}
                     
-                    {/* 11. O 'isLoading' agora vem do 'useActionState' */}
                     <Button type='submit' isLoading={isLoading}>Entrar</Button>
                     <a href="/signup" className='text-gray-300 cursor-pointer '>Criar conta</a>
                 </form>

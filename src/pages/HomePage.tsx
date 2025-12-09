@@ -28,7 +28,6 @@ export function Home(){
         try {
         const response = await fetch(`http://localhost:8080/work/list/1/page/${page}`);
         const data = await response.json();
-        console.log("RESPOSTA DA API:", data); 
         if (data.works && Array.isArray(data.works)) {
           setWorks(data.works);
         }

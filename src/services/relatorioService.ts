@@ -36,7 +36,6 @@ export const relatorioService = {
         throw new Error("A foto é obrigatória!");
       }
 
-      // Ajuste a rota conforme seu backend ('/progressReport/register' ou '/progress-report')
       const response = await api.post('/progressReport/register', formData);
       return response.data;
 
@@ -59,7 +58,6 @@ export const relatorioService = {
   getSubetapasByWork: async (workId: number) => {
     try {
       const response = await api.get(`/substage/list/${workId}`);
-      // Tratamento para pegar dados aninhados do backend, ajuste conforme seu JSON
       const rawData = response.data.subStages || [];
       const listaPlana = rawData.flat();
 

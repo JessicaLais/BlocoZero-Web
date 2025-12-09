@@ -33,7 +33,7 @@ export function CategoriasPanel({ workId }: Props) {
   const [isVisible, setIsVisible] = useState(false);
   
   const [categories, setCategories] = useState<CategoryData[]>([]);
-  const [types, setTypes] = useState<TypeData[]>([]); // Tipos desta obra
+  const [types, setTypes] = useState<TypeData[]>([]); 
   
   const [loading, setLoading] = useState(true);
   const [selectedId, setSelectedId] = useState<number | null>(null);

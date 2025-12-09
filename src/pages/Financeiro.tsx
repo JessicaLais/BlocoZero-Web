@@ -11,7 +11,6 @@ import { financeiroService } from '../services/financeiroService';
 import type { RelatorioFinanceiroDTO } from '../dtos/financeiro';
 
 export function Fin() {
-  // O nome aqui deve ser EXATAMENTE igual ao definido na rota: /obra/:work_id/financeiro
   const { work_id } = useParams(); 
 
   const [searchTerm, setSearchTerm] = useState("");
@@ -24,10 +23,8 @@ export function Fin() {
     return isNaN(numero) ? "R$ 0,00" : numero.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
   };
 
-  // --- 1. BUSCA DE DADOS ---
   useEffect(() => {
     const carregarDados = async () => {
-      // Se não tiver work_id na URL (undefined), paramos e avisamos no console
       if (!work_id) {
         console.warn("Nenhum ID de obra (work_id) encontrado na URL.");
         setLoading(false);
@@ -36,7 +33,6 @@ export function Fin() {
 
       try {
         setLoading(true);
-        // O service espera um number, então convertemos o parâmetro da URL
         const idNumerico = Number(work_id); 
         const dados = await financeiroService.getRelatorio(idNumerico);
         setRelatorio(dados);
@@ -48,9 +44,8 @@ export function Fin() {
     };
     
     carregarDados();
-  }, [work_id]); // Recarrega sempre que o work_id mudar
+  }, [work_id]); 
 
-  // --- 2. PREPARAÇÃO DOS DADOS (MEMO) ---
   const headers = useMemo(() => {
     if (!relatorio || !relatorio.tabela_dados || relatorio.tabela_dados.length === 0) return [];
     return relatorio.tabela_dados[0].cronograma_financeiro.map(c => c.mes);
@@ -102,13 +97,11 @@ export function Fin() {
   }, [relatorio]);
 
 
-  // --- 3. RENDERIZAÇÃO ---
 
   if (loading) {
     return <div className="min-h-screen bg-[#F5F5F5] p-8 flex items-center justify-center">Carregando relatório...</div>;
   }
 
-  // Se terminou de carregar e o work_id não existe ou o relatório falhou
   if (!work_id || !relatorio) {
     return (
         <div className="min-h-screen bg-[#F5F5F5] p-8 flex items-center justify-center text-gray-500">
@@ -121,7 +114,6 @@ export function Fin() {
     <div className="h-screen bg-[#F5F5F5] p-4 md:p-6 overflow-hidden">
       <main className="w-full max-w-full min-w-0">
         
-        {/* HEADER: Cards de Resumo */}
         <section className="flex flex-col md:flex-row items-end justify-start gap-4 mb-4 flex-wrap">
           <div className="flex gap-4 md:gap-6 max-w-full">
              <InfoCard 
@@ -155,7 +147,6 @@ export function Fin() {
           </div>
         </section>
 
-        {/* TABELA PRINCIPAL */}
         <section className="border border-gray-300 rounded-lg overflow-x-scroll md:w-[1120px]  2xl:w-[1480px] shadow-sm bg-white">
           <div>
             <table className="w-full text-left border-collapse">
@@ -196,7 +187,6 @@ export function Fin() {
           </div>
         </section>
 
-        {/* TOTAIS (RODAPÉ) */}
         <section className="mt-4 md:w-[1120px] 2xl:w-[1480px] overflow-x-scroll">
           <TotalsTable 
             mesesLabels={headers}

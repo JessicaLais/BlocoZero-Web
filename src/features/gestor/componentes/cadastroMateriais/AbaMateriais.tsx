@@ -9,7 +9,7 @@ import incluirSvg from "../../../../assets/incluir.svg";
 import deletarSvg from "../../../../assets/deletar.svg";
 import { api } from "../../../../services/api";
 
-// Interfaces
+
 interface StockData {
     id_stock: number;
     id_work: number;
@@ -22,7 +22,7 @@ interface StockData {
     weightLength: number;
     minQuantity: number;
     costUnit: number;
-    // O backend pode mandar o objeto category aninhado, mas vamos garantir buscando a lista
+    
     category?: { name: string }; 
 }
 
@@ -41,7 +41,7 @@ interface TypeData {
 
 const stockSchema = z.object({
     id_work: z.coerce.number().min(1, "ID da obra inválido"),
-    id_type: z.coerce.number(), // Será preenchido automaticamente ao escolher a categoria
+    id_type: z.coerce.number(), 
     id_category: z.coerce.number().min(1, "Selecione a categoria"),
     code: z.string().min(1, "O código é obrigatório"),
     name: z.string().min(1, "O nome é obrigatório"),
@@ -60,13 +60,13 @@ export function MateriaisPanel({ workId }: Props) {
     
     const [isVisible, setIsVisible] = useState(false);
     const [stocks, setStocks] = useState<StockData[]>([]);
-    const [categories, setCategories] = useState<CategoryOption[]>([]); // Lista de categorias para o select
+    const [categories, setCategories] = useState<CategoryOption[]>([]); 
     const [loading, setLoading] = useState(true);
     const [selectedId, setSelectedId] = useState<number | null>(null);
 
     const [formData, setFormData] = useState({
         id_work: workId,
-        id_type: "1", // Vamos tentar deduzir isso da categoria
+        id_type: "1", 
         id_category: "",
         code: "",
         name: "",
@@ -77,10 +77,8 @@ export function MateriaisPanel({ workId }: Props) {
         costUnit: "0.00",
     });
 
-    // 1. Busca Categorias (Lógica robusta igual a da aba Categorias)
     const fetchCategoriesForWork = async () => {
         try {
-            // Primeiro busca os Tipos da Obra
             const resTypes = await api.get(`/type/list/${workId}`);
             const types = resTypes.data.types || resTypes.data || [];
             
@@ -88,10 +86,8 @@ export function MateriaisPanel({ workId }: Props) {
 
             let allCats: CategoryOption[] = [];
             
-            // Itera pelos tipos para buscar as categorias de cada um
             for (const type of types) {
                 try {
-                    // Verifica se o tipo é desta obra
                     if (Number(type.work_id) === Number(workId)) {
                         const resCat = await api.get(`/category/list/${type.id}`);
                         const cats = resCat.data.categories || resCat.data || [];
@@ -102,7 +98,6 @@ export function MateriaisPanel({ workId }: Props) {
                 } catch (e) { /* ignora erro */ }
             }
             
-            // Remove duplicatas
             const uniqueCats = Array.from(new Set(allCats.map(a => a.id)))
                 .map(id => allCats.find(a => a.id === id)!);
 
@@ -132,7 +127,7 @@ export function MateriaisPanel({ workId }: Props) {
         if (workId) {
             setFormData(prev => ({ ...prev, id_work: workId }));
             fetchStocks();
-            fetchCategoriesForWork(); // Carrega as categorias ao abrir
+            fetchCategoriesForWork(); 
         }
     }, [workId]);
 
@@ -151,14 +146,11 @@ export function MateriaisPanel({ workId }: Props) {
         });
     };
 
-    // Helper para exibir nome da categoria na tabela
     const getCategoryName = (id: number) => {
         const cat = categories.find(c => c.id === id);
-        return cat ? cat.name : `ID ${id}`; // Mostra nome se achar, senão ID
+        return cat ? cat.name : `ID ${id}`; 
     };
 
-    // Handler especial para o Select de Categoria
-    // Quando seleciona categoria, já tenta setar o id_type correto
     const handleCategoryChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
         const catId = Number(e.target.value);
         const selectedCat = categories.find(c => c.id === catId);
@@ -166,7 +158,6 @@ export function MateriaisPanel({ workId }: Props) {
         setFormData(prev => ({
             ...prev,
             id_category: e.target.value,
-            // Se achou a categoria, usa o id_type dela. Senão mantém o atual.
             id_type: selectedCat ? String(selectedCat.id_type) : prev.id_type
         }));
     };
@@ -265,10 +256,9 @@ export function MateriaisPanel({ workId }: Props) {
                             onChange={handleInputChange} containerClassName="flex-1"
                         />
                         
-                        {/* SELECT DE CATEGORIAS POPULADO DINAMICAMENTE */}
                         <SelectForm
                             legend="Categoria:" name="id_category" value={formData.id_category}
-                            onChange={handleCategoryChange} // Usamos o handler especial aqui
+                            onChange={handleCategoryChange} 
                             containerClassName="flex-1"
                         >
                             <option value="">Selecione...</option>
@@ -364,7 +354,6 @@ export function MateriaisPanel({ workId }: Props) {
                             <td className="px-2 border-1">{item.code}</td>
                             <td className="px-2 border-1">{item.name}</td>
                             
-                            {/* AQUI ESTÁ A MÁGICA: Mostra o nome real da categoria */}
                             <td className="px-2 border-1">
                                 {item.category?.name || getCategoryName(item.id_category)}
                             </td>

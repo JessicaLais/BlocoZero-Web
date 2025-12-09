@@ -1,11 +1,9 @@
-// features/gestor/componentes/Relatorios/RelatoriosGestorPage.tsx
 import TabelaRelatorios from "../features/gestor/componentes/Relatorios/TabelaRelatorios";
 import { useParams } from "react-router-dom";
 
 export const RelatoriosGestorPage = () => {
   const { work_id } = useParams<{ work_id: string }>();
 
-  // Debug: Veja no console do navegador o que aparece aqui
   console.log("ID da Obra na Página:", work_id);
 
   if (!work_id) {

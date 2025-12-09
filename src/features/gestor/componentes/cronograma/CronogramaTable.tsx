@@ -62,19 +62,16 @@ export function CronogramaTable({ id_work, filterStageId, onChangeStats }: Crono
     return { start: minDate.toISOString(), end: maxDate.toISOString() };
   };
 
-  // --- CORREÇÃO DO CÁLCULO DE PROGRESSO ---
   const getStageProgress = (tasks: SubtaskAPI[]) => {
       if (!tasks.length) return 0;
       
       let sum = 0;
       tasks.forEach(t => {
           let val = t.progress || 0;
-          // Normaliza: se vier 0.25 vira 25. Se vier 25, mantém 25.
           if (val > 0 && val <= 1) val = val * 100;
           sum += val;
       });
       
-      // Retorna a média simples (0 a 100)
       return sum / tasks.length;
   };
 
@@ -128,7 +125,7 @@ export function CronogramaTable({ id_work, filterStageId, onChangeStats }: Crono
         
         {displayedStages.map((stage) => {
           const { start, end } = getStageDates(stage);
-          const stageProgress = getStageProgress(stage.tasks); // Agora retorna 0-100
+          const stageProgress = getStageProgress(stage.tasks); 
           
           let duration = 0;
           if (start && end) {
@@ -138,7 +135,6 @@ export function CronogramaTable({ id_work, filterStageId, onChangeStats }: Crono
 
           return (
             <React.Fragment key={stage.stageId}>
-              {/* Linha da ETAPA (Pai) */}
               <div 
                 className="grid grid-cols-12 py-3 px-4 hover:bg-gray-50 cursor-pointer items-center bg-gray-50/30"
                 onClick={() => toggleStage(stage.stageId)}
@@ -150,16 +146,13 @@ export function CronogramaTable({ id_work, filterStageId, onChangeStats }: Crono
                   {stage.stageName}
                 </div>
                 
-                {/* Dados da Etapa */}
                 <div className="col-span-1 text-center text-sm text-gray-700 font-medium">
-                    {/* CORREÇÃO: Removemos a multiplicação por 100 aqui */}
                     {stageProgress.toFixed(2)}%
                 </div>
                 <div className="col-span-1 text-center text-sm text-gray-600">{duration} dias</div>
                 <div className="col-span-2 text-center text-sm text-gray-800 font-medium">{formatDate(start)}</div>
                 <div className="col-span-2 text-center text-sm text-gray-800 font-medium">{formatDate(end)}</div>
                 
-                {/* Barra de Progresso */}
                 <div className="col-span-3 px-2">
                    <div className="w-full bg-gray-200 rounded-full h-3 overflow-hidden">
                       <div className="bg-slate-400 h-3 rounded-full transition-all duration-500" style={{ width: `${stageProgress}%` }}></div>
@@ -167,9 +160,7 @@ export function CronogramaTable({ id_work, filterStageId, onChangeStats }: Crono
                 </div>
               </div>
 
-              {/* Linhas das SUBETAPAS */}
               {expandedStages.includes(stage.stageId) && stage.tasks.map((task, index) => {
-                 // Normaliza visualmente também
                  let progVal = task.progress || 0;
                  if (progVal > 0 && progVal <= 1) progVal = progVal * 100;
 
@@ -199,7 +190,6 @@ export function CronogramaTable({ id_work, filterStageId, onChangeStats }: Crono
   );
 }
 
-// Helper Stats
 function calculateStats(data: StageAPI[]) {
     const hoje = new Date();
     let atrasadas = 0, adiantadas = 0, dentro = 0, total = 0;
@@ -208,13 +198,11 @@ function calculateStats(data: StageAPI[]) {
             total++;
             const end = task.endDate ? new Date(task.endDate) : null;
             
-            // Normaliza para cálculo (0 a 100)
             let prog = task.progress || 0;
             if (prog > 0 && prog <= 1) prog = prog * 100;
 
             if (!end) { dentro++; return; }
             
-            // Lógica de atraso
             if (prog < 100 && end < hoje) atrasadas++;
             else if (prog === 100 && end > hoje) adiantadas++;
             else dentro++;

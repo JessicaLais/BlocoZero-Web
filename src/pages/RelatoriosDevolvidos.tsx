@@ -17,10 +17,8 @@ interface Report {
   weather: string;
 }
 
-// --- FUNÇÃO PARA CONVERTER BINÁRIO EM BASE64 ---
 function arrayBufferToBase64(buffer: any) {
   let binary = '';
-  // Se vier no formato do Node { type: 'Buffer', data: [...] }
   const bytes = buffer.data ? new Uint8Array(buffer.data) : new Uint8Array(buffer);
   
   const len = bytes.byteLength;
@@ -56,7 +54,6 @@ export function RelatoriosDevolvidos() {
         const mappedReports: Report[] = data.progressReports.map((item: any) => {
           let status: StatusRelatorio;
           
-          // Normalizando o status (caso o backend mande texto diferente)
           if (item.status === "valid" || item.status === "Validado") {
             status = "Validado";
           } else if (item.status === "invalid" || item.status === "Recusado") {
@@ -65,11 +62,9 @@ export function RelatoriosDevolvidos() {
             status = "Pendente";
           }
 
-          // CONVERSÃO DA FOTO AQUI
           let photoBase64 = "";
           if (item.photo) {
             try {
-              // Se já for string (antigos), mantém. Se for objeto/array (novos), converte.
               if (typeof item.photo === 'string') {
                 photoBase64 = item.photo;
               } else {
@@ -89,7 +84,7 @@ export function RelatoriosDevolvidos() {
             motivo: status === "Recusado" ? item.managerRejectionReason : null,
             completionPercentage: item.completionPercentage,
             notes: item.notes,
-            photo: photoBase64, // Usando a foto convertida
+            photo: photoBase64, 
             weather: item.weather,
           };
         });
@@ -109,7 +104,6 @@ export function RelatoriosDevolvidos() {
   const filteredReports = reports.filter(r => r.status === filtroAtivo);
 
   const handleOpenDetails = (report: Report) => {
-    // Agora permite abrir modal mesmo se não tiver motivo, para ver a foto/detalhes
     setSelectedReport(report);
     setIsModalOpen(true);
   };
@@ -220,7 +214,6 @@ export function RelatoriosDevolvidos() {
               <div className="col-span-4 flex justify-center items-center gap-4">
                 {renderStatus(item.status)}
 
-                {/* Botão de Ver Detalhes (Olho) para TODOS os status agora, para você testar a imagem */}
                 <button 
                   onClick={() => handleOpenDetails(item)}
                   className="p-2 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-full transition-all"

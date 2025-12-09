@@ -4,7 +4,6 @@ import { FiLoader } from "react-icons/fi";
 import ResumoMovimentacao from "../features/gestor/componentes/estoque-tabela/MovimentacaoEstoque";
 import TabelaMateriais from "../features/gestor/componentes/estoque-tabela/TabelaMateriais";
 
-// Interface interna apenas para o estado do resumo
 interface MaterialResumo {
   entrada_rec: number;
   entrada_acu: number;
@@ -12,22 +11,18 @@ interface MaterialResumo {
   saida_acu: number;
 }
 
-// 2. Removemos as Props (interface e parâmetro), pois ele vai se virar sozinho
 export default function EstoqueTab() {
   
-  // 3. Pega o ID direto da URL (Igualzinho ao Orçamento)
   const { work_id } = useParams<{ work_id: string }>();
   const currentWorkId = Number(work_id);
 
   const [dadosResumo, setDadosResumo] = useState<MaterialResumo[]>([]);
   const [loading, setLoading] = useState(true);
 
-  // Endpoint dinâmico baseado no ID da URL
-  // Nota: Idealmente use variável de ambiente, mantive localhost para seguir seu padrão
+
   const endpoint = `http://localhost:8080/stock/list/${currentWorkId}`;
 
   useEffect(() => {
-    // Se não tiver ID (ex: rota errada), nem tenta buscar
     if (!currentWorkId) return;
 
     async function carregarDadosDeResumo() {
@@ -59,9 +54,8 @@ export default function EstoqueTab() {
     }
 
     carregarDadosDeResumo();
-  }, [currentWorkId, endpoint]); // Recarrega se o ID da URL mudar
+  }, [currentWorkId, endpoint]); 
 
-  // Tratamento de erro caso acesse sem ID
   if (!currentWorkId) return <div className="p-6">Obra não encontrada (ID inválido).</div>;
 
   if (loading) {
@@ -80,10 +74,8 @@ export default function EstoqueTab() {
         Controle de Estoque da Obra
       </h1>
 
-      {/* Cards de Resumo */}
       <ResumoMovimentacao materiais={dadosResumo} />
 
-      {/* Tabela Principal (passamos o endpoint já com o ID correto) */}
       <TabelaMateriais endpoint={endpoint} />
     </div>
   );
