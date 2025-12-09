@@ -1,7 +1,7 @@
 import { useEffect, useState, useMemo } from "react";
 import { FiLoader, FiFilter, FiSearch, FiX } from "react-icons/fi";
 
-// Interface Material
+
 interface Material {
   id_stock: number;
   codigo: string;
@@ -20,12 +20,12 @@ interface Material {
   saida_acu: number;
 }
 
-// Props do componente
+
 interface TabelaMateriaisProps {
   endpoint: string;
 }
 
-// Parâmetros de filtro
+
 interface FilterParams {
   codigo: string;
   categoria: string;
@@ -43,8 +43,7 @@ export default function TabelaMateriais({ endpoint }: TabelaMateriaisProps) {
 
   const toggleFiltros = () => setIsFiltrosOpen(!isFiltrosOpen);
 
-  // Buscar dados da API
-  // Buscar dados da API
+
   async function carregarDados() {
     setLoading(true);
     try {
@@ -56,22 +55,19 @@ export default function TabelaMateriais({ endpoint }: TabelaMateriaisProps) {
       const dados = await resposta.json();
       const dadosBrutos = dados.stock || dados;
 
-      // Log para você visualizar no Inspecionar Elemento (F12) o que realmente está chegando
-      console.log("Dados recebidos da API:", dadosBrutos);
+     
 
       if (!Array.isArray(dadosBrutos)) {
         throw new Error("Formato de dados inesperado da API.");
       }
 
       const dadosFormatados: Material[] = dadosBrutos.map((item: any) => {
-        // Tenta resolver TIPO
         let tipoResolvido = '-';
-        if (item.type && item.type.name) tipoResolvido = item.type.name; // Objeto aninhado
-        else if (item.typeName) tipoResolvido = item.typeName; // Campo flat (se existir)
-        else if (item.id_type) tipoResolvido = String(item.id_type); // ID (último recurso)
-        else if (item.type) tipoResolvido = String(item.type); // Valor direto
+        if (item.type && item.type.name) tipoResolvido = item.type.name; 
+        else if (item.typeName) tipoResolvido = item.typeName; 
+        else if (item.id_type) tipoResolvido = String(item.id_type); 
+        else if (item.type) tipoResolvido = String(item.type); 
 
-        // Tenta resolver CATEGORIA
         let catResolvida = '-';
         if (item.category && item.category.name) catResolvida = item.category.name;
         else if (item.categoryName) catResolvida = item.categoryName;
@@ -133,10 +129,8 @@ export default function TabelaMateriais({ endpoint }: TabelaMateriaisProps) {
   }
 
   return (
-    // CORREÇÃO 2: 'h-full' e 'overflow-hidden' impedem scroll na página inteira
     <div className="flex flex-col h-full w-full overflow-hidden">
       
-      {/* Botão de filtros e cabeçalho da tabela */}
       <div className="flex-none mb-1">
           <div className="flex justify-between items-center">
             <p className="text-sm text-gray-500">
@@ -156,10 +150,8 @@ export default function TabelaMateriais({ endpoint }: TabelaMateriaisProps) {
             </button>
           </div>
 
-          {/* Painel de filtros */}
           {isFiltrosOpen && (
             <div className="bg-white p-4 mt-4 rounded-2xl border border-[#c4c4c4] shadow-sm grid grid-cols-1 md:grid-cols-3 gap-4">
-              {/* Código */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">Buscar por Código</label>
                 <div className="relative">
@@ -174,7 +166,6 @@ export default function TabelaMateriais({ endpoint }: TabelaMateriaisProps) {
                 </div>
               </div>
 
-              {/* Categoria */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">Filtrar por Categoria</label>
                 <select
@@ -189,7 +180,6 @@ export default function TabelaMateriais({ endpoint }: TabelaMateriaisProps) {
                 </select>
               </div>
 
-              {/* Limpar filtros */}
               <div className="flex items-end">
                 <button
                   onClick={() => setFilterParams({ codigo: '', categoria: '' })}
@@ -202,9 +192,7 @@ export default function TabelaMateriais({ endpoint }: TabelaMateriaisProps) {
           )}
       </div>
 
-      {/* Tabela - Altura Dinâmica */}
-      {/* SE FILTRO ABERTO: h-[210px] */}
-      {/* SE FILTRO FECHADO: flex-1 (ocupa todo o resto) */}
+
       <div className={`overflow-y-scroll max-h-[328px] rounded-2xl border border-[#c4c4c4] shadow-sm bg-white relative w-full ${isFiltrosOpen ? 'h-[210px]' : 'flex-1'}`}>
         <table className="min-w-full border-collapse text-sm whitespace-nowrap">
           <thead className="bg-white text-gray-700 sticky top-0 z-10 shadow-sm">

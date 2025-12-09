@@ -8,14 +8,12 @@ import editarSvg from "../../../../assets/editar.svg";
 import deletarSvg from "../../../../assets/deletar.svg"; 
 import { api } from "../../../../services/api"; 
 
-// Interface dos dados
 interface TypeData {
   id: number;
   name: string;
   work_id: number;
 }
 
-// Props do Componente
 interface Props {
     workId: string;
 }
@@ -41,13 +39,11 @@ export function TiposPanel({ workId }: Props) {
   const fetchTypes = async () => {
     try {
       setLoading(true);
-      // Busca tipos vinculados a esta obra
       const response = await api.get(`/type/list/${workId}`);
       
       const rawData = response.data.types || response.data || [];
       
       if (Array.isArray(rawData)) {
-          // Filtro de segurança (caso o backend retorne todos os tipos do banco)
           const filtered = rawData.filter((t: TypeData) => Number(t.work_id) === Number(workId));
           setTypes(filtered);
       } else {
@@ -61,7 +57,6 @@ export function TiposPanel({ workId }: Props) {
     }
   };
 
-  // Recarrega se mudar a obra
   useEffect(() => {
     if (workId) {
         fetchTypes();
@@ -119,7 +114,6 @@ export function TiposPanel({ workId }: Props) {
       setLoading(true);
       const data = typeSchema.parse({ name: formData.name });
 
-      // Montamos o payload com o workId automático
       const payload = {
           name: data.name,
           work_id: Number(workId)
@@ -161,7 +155,6 @@ export function TiposPanel({ workId }: Props) {
               required
               containerClassName="flex-1"
             />
-            {/* Removemos o Input de Work ID pois agora é automático */}
           </div>
           <div className="flex gap-2 mt-2 justify-end">
             <Button

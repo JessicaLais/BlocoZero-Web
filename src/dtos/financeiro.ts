@@ -1,10 +1,8 @@
-// src/dtos/financeiro.ts
-
 export interface CronogramaMensal {
-  mes: string;          // Ex: "jan/25"
-  valor: string;        // Ex: "1500.00" (String vinda do back)
-  porcentagem: string;  // Ex: "10%"
-  valor_bruto: number;  // Ex: 1500 (Number para contas)
+  mes: string;          
+  valor: string;        
+  porcentagem: string;  
+  valor_bruto: number;  
 }
 
 export interface LinhaRelatorio {

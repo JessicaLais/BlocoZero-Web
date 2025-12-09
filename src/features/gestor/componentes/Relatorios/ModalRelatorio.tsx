@@ -16,12 +16,10 @@ export default function RelatorioDetalhesModal({ isOpen, onClose, relatorio, onA
     <div className="fixed inset-0 bg-gray-200 bg-opacity-50 z-50 flex items-center justify-center p-4 backdrop-blur-sm">
       <div className="bg-white rounded-lg shadow-xl w-full max-w-4xl max-h-[90vh] overflow-y-auto flex flex-col animate-fade-in-up">
         
-        {/* Header */}
         <div className="flex justify-between items-center p-6 border-b border-gray-200 sticky top-0 bg-white z-10">
           <div>
             <h2 className="text-xl font-bold text-gray-800">Avaliar Relatório</h2>
             <p className="text-sm text-gray-500 flex items-center gap-2 mt-1">
-                {/* Usando o campo 'data' em vez de startDate */}
                 <FiCalendar /> {new Date(relatorio.data).toLocaleDateString('pt-BR')} 
             </p>
           </div>
@@ -30,10 +28,8 @@ export default function RelatorioDetalhesModal({ isOpen, onClose, relatorio, onA
           </button>
         </div>
 
-        {/* Corpo */}
         <div className="p-8 grid grid-cols-1 lg:grid-cols-2 gap-8">
           
-          {/* Lado Esquerdo */}
           <div className="space-y-4">
              <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">Identificação</label>
@@ -67,17 +63,14 @@ export default function RelatorioDetalhesModal({ isOpen, onClose, relatorio, onA
 
              <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">Observações:</label>
-                  {/* Usando campo 'observacoes' */}
                   <div className="w-full bg-gray-50 border border-gray-200 rounded px-3 py-2 text-gray-600 text-sm italic min-h-[60px]">
                     "{relatorio.observacoes}"
                   </div>
              </div>
           </div>
 
-          {/* Lado Direito (Foto) */}
           <div className="flex flex-col gap-4">
               <div className="flex-1 bg-gray-100 border-2 border-dashed border-gray-300 rounded-lg flex items-center justify-center min-h-[200px] overflow-hidden relative group">
-                 {/* Usando campo 'imagemUrl' */}
                  {relatorio.imagemUrl ? (
                    <img src={relatorio.imagemUrl} alt="Evidência" className="w-full h-full object-cover absolute inset-0" />
                  ) : (
@@ -90,7 +83,6 @@ export default function RelatorioDetalhesModal({ isOpen, onClose, relatorio, onA
           </div>
         </div>
 
-        {/* Footer */}
         <div className="p-6 border-t border-gray-200 bg-gray-50 flex justify-end gap-3 sticky bottom-0 z-10">
           <button onClick={onRecusar} className="flex items-center gap-2 px-6 py-2 border border-red-500 text-red-600 rounded hover:bg-red-50 font-medium transition-colors">
             <FiXCircle /> Recusar

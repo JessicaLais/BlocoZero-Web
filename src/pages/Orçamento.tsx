@@ -7,9 +7,8 @@ import { Button } from "../features/home/components/Button";
 
 export function Orçamento() {
     const navigate = useNavigate();
-    const { work_id } = useParams<{ work_id: string }>(); // 2. Pega ID da URL
+    const { work_id } = useParams<{ work_id: string }>(); 
     
-    // Converte para número. Se não tiver ID, é 0 (mas a rota deve impedir isso)
     const currentWorkId = Number(work_id);
 
     const [contractValue, setContractValue] = useState(0);
@@ -21,7 +20,6 @@ export function Orçamento() {
 
         const fetchContractValue = async () => {
             try {
-                // Busca dados da obra específica
                 const resWork = await api.get(`/work/specific/${currentWorkId}`);
                 const workData = resWork.data.work || resWork.data;
                 
@@ -37,7 +35,6 @@ export function Orçamento() {
 
         const fetchTotalSpent = async () => {
             try {
-                // Busca o orçamento da obra específica
                 const resBudget = await api.get(`/budget/list/${currentWorkId}`);
                 const data = resBudget.data;
                 
@@ -57,7 +54,7 @@ export function Orçamento() {
 
         fetchContractValue();
         fetchTotalSpent();
-    }, [currentWorkId]); // 3. Recarrega se o ID mudar
+    }, [currentWorkId]); 
 
     const formatMoney = (value: number) => {
         return value.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
@@ -68,11 +65,10 @@ export function Orçamento() {
     return (
         <div className="flex flex-col h-full bg-white overflow-hidden">
             
-            {/* Cabeçalho Opcional para Navegação */}
             <div className="px-5 pt-4 flex justify-between items-center">
                 <h1 className="text-xl font-bold text-gray-800">Orçamento: {workTitle}</h1>
                 <Button 
-                    onClick={() => navigate('/orcamento')} // Volta para a seleção
+                    onClick={() => navigate('/orcamento')}
                     className="px-3 py-1 bg-gray-200 text-gray-700 hover:bg-gray-300 text-xs rounded"
                 >
                     Trocar Obra
@@ -91,7 +87,6 @@ export function Orçamento() {
             </div>
 
             <div className="flex-1 overflow-hidden px-5 pb-5">
-                {/* 4. IMPORTANTE: Passamos o ID para a tabela de orçamento */}
                 <TabBudget workId={currentWorkId} />
             </div>
         </div>

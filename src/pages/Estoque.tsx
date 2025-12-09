@@ -22,7 +22,6 @@ export function EstoqueObra() {
     return (
         <div className="bg-white h-screen p-10 flex flex-col">
             <div className="mb-4">
-                {/* Use Link se estiver usando react-router, senão mantenha o <a> */}
                 <Link to="/estoque" className="font-semibold text-blue-400 cursor-pointer hover:underline">
                     &larr; Voltar
                 </Link>

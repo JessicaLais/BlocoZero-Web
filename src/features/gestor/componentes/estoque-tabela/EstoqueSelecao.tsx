@@ -1,5 +1,5 @@
 import { useNavigate } from "react-router-dom";
-import { ListaSelecaoObra } from "../../../../shared/ListaSelecaoObra";// Certifique-se que o caminho está correto
+import { ListaSelecaoObra } from "../../../../shared/ListaSelecaoObra";
 
 export function EstoqueSelecao() {
     const navigate = useNavigate();

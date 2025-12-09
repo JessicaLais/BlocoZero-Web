@@ -12,7 +12,7 @@ export function SelectForm({
     className,
     legendColor = "text-gray-950",
     containerClassName,
-    children, // Precisa da prop 'children' para passar os <option>
+    children, 
     ...rest
 }: Props) {
     const id = useId();

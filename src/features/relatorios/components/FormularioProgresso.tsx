@@ -12,13 +12,11 @@ interface Substage {
     name: string;
 }
 
-// 1. ADICIONE O workId AQUI NA INTERFACE
 interface FormularioProgressoProps {
     onSubmit: (data: any) => void;
-    workId: number; // <--- OBRIGATÓRIO PARA O ERRO SUMIR
+    workId: number; 
 }
 
-// 2. RECEBA O workId AQUI NOS PARÂMETROS
 export function FormularioProgresso({ onSubmit, workId }: FormularioProgressoProps) {
     const [listaEtapas, setListaEtapas] = useState<Stage[]>([]);
     const [listaSubetapas, setListaSubetapas] = useState<Substage[]>([]);
@@ -34,16 +32,14 @@ export function FormularioProgresso({ onSubmit, workId }: FormularioProgressoPro
         observacoes: ''
     });
 
-    // 3. USE O workId PARA CARREGAR AS ETAPAS CERTAS
     useEffect(() => {
         if (workId) {
             carregarDados();
         }
-    }, [workId]); // <--- Quando o ID mudar, recarrega
+    }, [workId]); 
 
     const carregarDados = async () => {
         try {
-            // Usa o workId real em vez de um fixo
             const [etapasRes, subetapasRes] = await Promise.all([
                 relatorioService.getEtapas(workId),
                 relatorioService.getSubetapasByWork(workId)
@@ -56,10 +52,7 @@ export function FormularioProgresso({ onSubmit, workId }: FormularioProgressoPro
         }
     };
 
-    // ... (O RESTO DO CÓDIGO CONTINUA IGUAL ABAIXO) ...
-    // ... useEffect do filtro, handleChange, handleSubmit, return ...
-    
-    // Vou colocar apenas o finalzinho para você se localizar
+
     useEffect(() => {
         if (formData.etapa) {
             const etapaIdSelecionada = Number(formData.etapa);
@@ -95,10 +88,7 @@ export function FormularioProgresso({ onSubmit, workId }: FormularioProgressoPro
 
     return (
         <form id="form-progresso" className="w-full" onSubmit={handleSubmit}>
-            {/* ... SEU JSX DO FORMULÁRIO (Igual ao que você já tem) ... */}
-            {/* Vou omitir o JSX para economizar espaço, mantenha o seu igual */}
             
-            {/* LINHA 1 */}
             <div className="flex flex-col xl:flex-row gap-6 mb-6">
                 <div className="flex items-center gap-3 flex-1">
                     <label className={labelStyle}>Etapa:</label>
@@ -121,7 +111,6 @@ export function FormularioProgresso({ onSubmit, workId }: FormularioProgressoPro
                 </div>
             </div>
 
-            {/* LINHA 2 */}
             <div className="flex flex-col xl:flex-row gap-6 mb-6">
                 <div className="flex items-center gap-3 flex-[2]">
                     <label className={labelStyle}>Subetapa:</label>
@@ -141,7 +130,6 @@ export function FormularioProgresso({ onSubmit, workId }: FormularioProgressoPro
                 </div>
             </div>
 
-            {/* LINHA 3 */}
             <div className="flex items-center gap-3 mb-8 w-full xl:w-1/3">
                 <label className={labelStyle}>Clima:</label>
                 <select name="clima" className={`${inputStyle} w-full`} value={formData.clima} onChange={handleChange}>
@@ -153,7 +141,6 @@ export function FormularioProgresso({ onSubmit, workId }: FormularioProgressoPro
                 </select>
             </div>
 
-            {/* LINHA 4 */}
             <div className="mb-4">
                 <label className={`${labelStyle} mb-2 block`}>Observações:</label>
                 <textarea name="observacoes" rows={8} className="w-full border border-gray-400 rounded-sm p-2 text-sm resize-none focus:outline-none focus:border-gray-600 shadow-sm" value={formData.observacoes} onChange={handleChange}></textarea>
