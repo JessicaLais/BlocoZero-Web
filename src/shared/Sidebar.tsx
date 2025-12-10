@@ -39,7 +39,7 @@ const sidebarLinks: SidebarLink[] = [
         roles: ['tender'],
         children: [
             {
-                label: 'Devolvidos',
+                label: 'Enviados',
                 to: '/relatorios-devolvidos', 
                 roles: ['tender'],
                 icon: undefined 

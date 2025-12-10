@@ -85,7 +85,6 @@ export function SignIn() {
                     )}
                     
                     <Button type='submit' isLoading={isLoading}>Entrar</Button>
-                    <a href="/signup" className='text-gray-300 cursor-pointer '>Criar conta</a>
                 </form>
             </div>
             <LogoAuth />
